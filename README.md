@@ -1,4 +1,4 @@
-# bip-cli
+# Bip CLI
 
 Bip is an easy to use static website hosting platform.
 
@@ -7,7 +7,7 @@ Bip is an easy to use static website hosting platform.
 To get started, install bip-cli via NPM
 
 ```shell
-npm install bip-cli
+npm i @bip-sh/cli
 ```
 
 ## Domains
