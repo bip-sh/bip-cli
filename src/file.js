@@ -8,6 +8,7 @@ const progress = require('./progress');
 const validation = require('./validation');
 const projectSettings = require('./projectsettings')
 const chalk = require('chalk');
+const emoji = require('node-emoji');
 const Table = require('cli-table');
 
 module.exports = {
@@ -15,7 +16,7 @@ module.exports = {
     await module.exports.upload(filepath, destination, function(status) {
       if (status) {
         console.log(
-          chalk.green('File uploaded successfully!')
+          chalk.green(emoji.get('white_check_mark') + ' File uploaded successfully!')
         );
       }
     });
@@ -24,7 +25,7 @@ module.exports = {
     await module.exports.delete(filepath, function(status) {
       if (status) {
         console.log(
-          chalk.green('File deleted successfully!')
+          chalk.green(emoji.get('white_check_mark') + ' File deleted successfully!')
         );
       }
     });
