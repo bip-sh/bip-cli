@@ -7,6 +7,7 @@ const validation = require('./validation');
 const fs = require('fs');
 const chalk = require('chalk');
 const Table = require('cli-table');
+const emoji = require('node-emoji');
 const prompts = require('prompts');
 
 module.exports = {
@@ -61,7 +62,7 @@ module.exports = {
         switch(response.status) {
           case 200:
             console.log(
-              chalk.green('Domain created successfully!')
+              chalk.green(emoji.get('white_check_mark') + ' Domain created successfully!')
             );
             break;
           default:
@@ -98,7 +99,7 @@ module.exports = {
       switch(response.status) {
         case 200:
           console.log(
-            chalk.green('Domain deleted successfully!')
+            chalk.green(emoji.get('white_check_mark') + ' Domain deleted successfully!')
           );
           break;
         default:
@@ -110,7 +111,7 @@ module.exports = {
     projectSettings.set('domain', domain);
 
     console.log(
-      chalk.green('Domain set')
+      chalk.green(emoji.get('white_check_mark') + ' Domain set')
     );
   },
   list: async function (cb) {

@@ -9,6 +9,7 @@ const fileLib = require('./file');
 const listLib = require('./list');
 const projectSettings = require('./projectsettings');
 const validation = require('./validation');
+const emoji = require('node-emoji');
 const chalk = require('chalk');
 
 const self = this;
@@ -57,7 +58,7 @@ module.exports = {
           progress.spinner().stop();
       
           console.log(
-            chalk.green('Files synced')
+            chalk.green(emoji.get('white_check_mark') + ' Files synced')
           );
         } else {
           // No existing files found on remote
@@ -72,7 +73,7 @@ module.exports = {
           progress.spinner().stop();
       
           console.log(
-            chalk.green('Files synced')
+            chalk.green(emoji.get('white_check_mark') + ' Files synced')
           );
         }
       }

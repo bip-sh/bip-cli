@@ -2,6 +2,7 @@ const config = require('./config');
 const progress = require('./progress');
 const validation = require('./validation');
 const chalk = require('chalk');
+const emoji = require('node-emoji')
 const prompts = require('prompts');
 
 module.exports = {
@@ -14,7 +15,7 @@ module.exports = {
     });
 
     if (promptRes.value) {
-      progress.spinner().start('Logging in...');
+      progress.spinner().start('Logging in');
       let headers = {
         'X-Api-Key': promptRes.value
       }
@@ -31,7 +32,7 @@ module.exports = {
         case 200:
           config.userpref.set('apiKey', promptRes.value);
           console.log(
-            chalk.green('Logged in successfully!')
+            chalk.green(emoji.get('key') + ' Logged in successfully!')
           );
           break;
         case 403:
@@ -49,7 +50,7 @@ module.exports = {
   logoutCommand: async function () {
     config.userpref.delete('apiKey');
     console.log(
-      chalk.green('Logged out successfully')
+      chalk.green(emoji.get('door') + ' Logged out successfully')
     );
   }
 };

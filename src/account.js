@@ -4,6 +4,7 @@ const projectSettings = require('./projectsettings');
 const progress = require('./progress');
 const validation = require('./validation');
 const chalk = require('chalk');
+const emoji = require('node-emoji')
 const open = require('open');
 
 module.exports = {
@@ -25,7 +26,7 @@ module.exports = {
 
     switch(response.status) {
       case 200:
-        console.log('Your account balance is: ' + responseJson.symbol + responseJson.balance);
+        console.log(emoji.get('pound') + ' Your account balance is: ' + responseJson.symbol + responseJson.balance);
         break;
       default:
         errors.returnServerError(response.status, responseJson);
@@ -52,7 +53,7 @@ module.exports = {
     switch(response.status) {
       case 200:
         await open(responseJson.url);
-        console.log('Please follow the instructions in the newly opened browser window to topup your account.');
+        console.log(emoji.get('link') + ' Please follow the instructions in the newly opened browser window to topup your account.');
         break;
       default:
         errors.returnServerError(response.status, responseJson);
