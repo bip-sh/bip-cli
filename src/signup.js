@@ -4,6 +4,7 @@ const projectSettings = require('./projectsettings');
 const progress = require('./progress');
 const validation = require('./validation');
 const chalk = require('chalk');
+const emoji = require('node-emoji');
 const prompts = require('prompts');
 
 module.exports = {
@@ -76,7 +77,7 @@ module.exports = {
         switch(response.status) {
           case 200:
             console.log(
-              chalk.green(responseJson.message)
+              chalk.green(emoji.emojify(responseJson.message))
             );
             break;
           default:
