@@ -64,8 +64,25 @@ Your website is now live on Bip.
 
 ## Commands
 
-### Domains
-#### Create domain
+### Login
+
+```shell
+bip login
+```
+
+### Logout
+
+```shell
+bip logout
+```
+
+### Signup
+
+```shell
+bip signup
+```
+
+### Create domain
 
 To create a domain on bip, use the domain create command
 
@@ -85,6 +102,12 @@ bip domain list
 
 ```shell
 bip domain delete <domain>
+```
+
+### Balance
+
+```shell
+bip account balance
 ```
 
 ### Topup
@@ -109,4 +132,10 @@ To upload the contents of a local directory to bip.sh, navigate to the directory
 
 ```shell
 bip sync
+```
+
+### Delete file
+
+```shell
+bip delete <filepath>
 ```
