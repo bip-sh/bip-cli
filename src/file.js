@@ -48,7 +48,7 @@ module.exports = {
       headers: headers,
       method: 'DELETE'
     }
-    let response = await validation.safelyFetch(config.api.baseurl + 'files/' + domain + '/' + filepath, init)
+    let response = await validation.safelyFetch(config.api.baseurl + 'files/' + domain + filepath, init)
     let responseJson = await validation.safelyParseJson(response)
 
     progress.spinner().stop();
@@ -87,7 +87,7 @@ module.exports = {
       method: 'PUT',
       body: data
     }
-    let response = await validation.safelyFetch(config.api.baseurl + 'files/' + domain + '/' + destination, init)
+    let response = await validation.safelyFetch(config.api.baseurl + 'files/' + domain + destination, init)
     let responseJson = await validation.safelyParseJson(response)
 
     progress.spinner().stop();
