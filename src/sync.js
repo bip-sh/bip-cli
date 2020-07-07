@@ -102,7 +102,7 @@ async function readFilesInDir(args) {
           remoteSyncLocation: args.remoteSyncLocation
         });
       } else {
-        var contents = fs.readFileSync(args.localDirectory + '/' + file, 'utf8');
+        var contents = fs.readFileSync(args.localDirectory + '/' + file);
 
         // Get checksum of read file
         let shasum = crypto.createHash('sha1');
