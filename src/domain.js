@@ -4,7 +4,6 @@ const projectSettings = require('./projectsettings');
 const prices = require('./prices');
 const progress = require('./progress');
 const validation = require('./validation');
-const fs = require('fs');
 const chalk = require('chalk');
 const Table = require('cli-table');
 const emoji = require('node-emoji');

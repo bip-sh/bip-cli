@@ -1,14 +1,9 @@
 const fs = require("fs");
 const os = require("os");
-const path = require("path");
-const util = require("util");
-const crypto = require('crypto');
 const { program } = require('commander');
 const config = require('./config');
 const errors = require('./errors');
 const progress = require('./progress');
-const fileLib = require('./file');
-const listLib = require('./list');
 const projectSettings = require('./projectsettings');
 const validation = require('./validation');
 const tasks = require('./tasks');
@@ -16,8 +11,6 @@ const emoji = require('node-emoji');
 const chalk = require('chalk');
 const file_system = require('fs');
 const archiver = require('archiver');
-
-const self = this;
 
 module.exports = {
   deployCommand: async function () {

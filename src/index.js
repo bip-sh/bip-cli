@@ -6,12 +6,9 @@ const chalk = require('chalk');
 var figlet = require('figlet');
 const packageJson = require('../package.json');
 
-const progress = require('./progress');
 const account = require('./account');
 const auth = require('./auth');
-const list = require('./list');
 const domain = require('./domain');
-const file = require('./file');
 const deploy = require('./deploy');
 const signup = require('./signup');
 const remotestatus = require('./remotestatus');
@@ -84,24 +81,9 @@ remotestatus.getStatus(packageJson.version, function() {
     .action(domain.deleteCommand);
 
     program
-    .command('list <path>')
-    .description('list a directory')
-    .action(list.listCommand);
-
-    program
     .command('use <domain>')
     .description('set the domain to perform actions on')
     .action(domain.useCommand);
-
-    program
-    .command('upload <filepath> <destination>')
-    .description('upload a file')
-    .action(file.uploadCommand);
-
-    program
-    .command('delete <filepath>')
-    .description('delete a file')
-    .action(file.deleteCommand);
 
     program
     .command('deploy')
