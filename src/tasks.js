@@ -1,9 +1,7 @@
 const config = require('./config');
 const errors = require('./errors');
-const projectSettings = require('./projectsettings');
 const progress = require('./progress');
 const validation = require('./validation');
-const chalk = require('chalk');
 
 module.exports = {
   getStatus: async function (taskID, cb) {
