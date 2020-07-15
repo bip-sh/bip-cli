@@ -12,7 +12,7 @@ const auth = require('./auth');
 const list = require('./list');
 const domain = require('./domain');
 const file = require('./file');
-const sync = require('./sync');
+const deploy = require('./deploy');
 const signup = require('./signup');
 const remotestatus = require('./remotestatus');
 
@@ -104,9 +104,9 @@ remotestatus.getStatus(packageJson.version, function() {
     .action(file.deleteCommand);
 
     program
-    .command('sync')
-    .description('sync the current working directory with the bip.sh domain')
-    .action(sync.syncCommand);
+    .command('deploy')
+    .description('deploy the current working directory to the bip.sh domain')
+    .action(deploy.deployCommand);
 
   program.parse(process.argv);
 });
