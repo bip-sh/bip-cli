@@ -46,18 +46,18 @@ Your domain should be in the format `yourdomain.bip.sh`
 
 ### Initialise your project
 
-Use the bip use command to indicate which bip domain should be used when uploading and syncing directories
+Use the bip use command to indicate which bip domain should be used when deploying directories
 
 ```shell
 bip use <domain>
 ```
 
-### Sync your directory
+### Deploy your project
 
-Finally, use the sync command to deploy your website to Bip
+Finally, use the deploy command to deploy your website to Bip
 
 ```shell
-bip sync
+bip deploy
 ```
 
 Your website is now live on Bip.
@@ -120,18 +120,18 @@ bip account topup <amount>
 
 ### Initialise a project
 
-Specify the domain you wish to upload/sync to with bip use
+Specify the bip domain you wish to deploy to
 
 ```shell
 bip use <domain>
 ```
 
-### Sync a directory
+### Deploy a directory
 
-To upload the contents of a local directory to bip.sh, navigate to the directory and then use bip sync
+To deploy the contents of a local directory to bip.sh, navigate to the directory and then use bip deploy
 
 ```shell
-bip sync
+bip deploy
 ```
 
 ### Delete file
