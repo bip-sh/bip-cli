@@ -4,6 +4,7 @@ const projectSettings = require('./projectsettings');
 const prices = require('./prices');
 const progress = require('./progress');
 const validation = require('./validation');
+const tasks = require('./tasks');
 const chalk = require('chalk');
 const Table = require('cli-table');
 const emoji = require('node-emoji');
@@ -56,13 +57,38 @@ module.exports = {
         let response = await validation.safelyFetch(config.api.baseurl + 'domains/' + domain, init)
         let responseJson = await validation.safelyParseJson(response)
     
-        progress.spinner().stop();
-    
         switch(response.status) {
           case 200:
-            console.log(
-              chalk.green(emoji.get('white_check_mark') + ' Domain created successfully!')
-            );
+            // Track status of remote task
+            tasks.getStatus(responseJson.taskID, function(status, statusText) {
+              statusText = statusText || "";
+
+              progress.spinner().stop();
+          
+              if (status == 3) {
+                if (statusText != "") {
+                  console.log(
+                    chalk.green(emoji.get('white_check_mark') + ' ' + statusText)
+                  );
+                } else {
+                  console.log(
+                    chalk.green(emoji.get('white_check_mark') + ' Domain created successfully!')
+                  );
+                }
+              } else {
+                if (status == 4) {
+                  if (statusText != "") {
+                    console.log(
+                      chalk.red(statusText)
+                    );
+                  } else {
+                    console.log(
+                      chalk.red('An unknown error occurred during domain creation')
+                    );
+                  }
+                }
+              }
+            });
             break;
           default:
             errors.returnServerError(response.status, responseJson);
@@ -93,13 +119,37 @@ module.exports = {
       let response = await validation.safelyFetch(config.api.baseurl + 'domains/' + domain, init)
       let responseJson = await validation.safelyParseJson(response)
 
-      progress.spinner().stop();
-
       switch(response.status) {
         case 200:
-          console.log(
-            chalk.green(emoji.get('white_check_mark') + ' Domain deleted successfully!')
-          );
+          tasks.getStatus(responseJson.taskID, function(status, statusText) {
+            statusText = statusText || "";
+
+            progress.spinner().stop();
+        
+            if (status == 3) {
+              if (statusText != "") {
+                console.log(
+                  chalk.green(emoji.get('white_check_mark') + ' ' + statusText)
+                );
+              } else {
+                console.log(
+                  chalk.green(emoji.get('white_check_mark') + ' Domain deleted successfully!')
+                );
+              }
+            } else {
+              if (status == 4) {
+                if (statusText != "") {
+                  console.log(
+                    chalk.red(statusText)
+                  );
+                } else {
+                  console.log(
+                    chalk.red('An unknown error occurred during domain deletion')
+                  );
+                }
+              }
+            }
+          });
           break;
         default:
           errors.returnServerError(response.status, responseJson);
