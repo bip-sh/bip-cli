@@ -2,6 +2,7 @@ const config = require('./config');
 const errors = require('./errors');
 const projectSettings = require('./projectsettings');
 const prices = require('./prices');
+const domainavailability = require('./domainavailability');
 const progress = require('./progress');
 const validation = require('./validation');
 const tasks = require('./tasks');
@@ -33,14 +34,15 @@ module.exports = {
   createCommand: async function (domain) {
     validation.requireApiKey();
 
-    progress.spinner().start('Fetching data');
+    progress.spinner().start('Checking availability');
 
-    await prices.get(async function(prices) {
+    await domainavailability.get(domain, async function(response) {
       progress.spinner().stop();
+
       const promptRes = await prompts( {
         type: 'confirm',
         name: 'value',
-        message: 'Creating the domain ' + domain + ' will cost ' + prices.symbol + prices.domain + ' per month. Would you like to continue?',
+        message: response.message,
         initial: false
       });
 
