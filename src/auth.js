@@ -3,7 +3,7 @@ const errors = require('./errors');
 const progress = require('./progress');
 const validation = require('./validation');
 const chalk = require('chalk');
-const emoji = require('node-emoji')
+const emoji = require('node-emoji');
 const prompts = require('prompts');
 
 module.exports = {
@@ -11,18 +11,20 @@ module.exports = {
 
     const promptRes = await prompts({
       type: 'text',
-      name: 'value',
-      message: `Please enter your API key`
+      name: 'email',
+      message: `Please enter your email address`
     });
 
-    if (promptRes.value) {
+    if (promptRes.email) {
+      let email = promptRes.email
       progress.spinner().start('Logging in');
       let headers = {
-        'X-Api-Key': promptRes.value
+        'Content-Type': 'application/x-www-form-urlencoded'
       }
       let init = {
         headers: headers,
-        method: 'GET'
+        method: 'POST',
+        body: 'email=' + email
       }
       let response = await validation.safelyFetch(config.api.baseurl + 'login', init)
       let responseJson = await validation.safelyParseJson(response)
@@ -31,20 +33,14 @@ module.exports = {
 
       switch(response.status) {
         case 200:
-          config.userpref.set('apiKey', promptRes.value);
           console.log(
-            chalk.green(emoji.get('key') + ' Logged in successfully!')
+            emoji.emojify(responseJson.message)
           );
-          break;
-        case 403:
-          console.log(
-            chalk.red('Incorrect API key. Please try again.')
-          );
+          console.log('');
+          await verifyCode(email);
           break;
         default:
-          console.log(
-            chalk.red('An unknown error occurred')
-          );
+          errors.returnServerError(response.status, responseJson);
       }
     }
   },
@@ -79,3 +75,44 @@ module.exports = {
     }
   }
 };
+
+async function verifyCode(email) {
+  const promptRes = await prompts({
+    type: 'text',
+    name: 'code',
+    message: `Enter your login code`
+  });
+  if (promptRes.code) {
+    progress.spinner().start('Logging in');
+    let headers = {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+    let init = {
+      headers: headers,
+      method: 'POST',
+      body: 'email=' + email + '&code=' + promptRes.code
+    }
+    let response = await validation.safelyFetch(config.api.baseurl + 'login/verify', init)
+    let responseJson = await validation.safelyParseJson(response)
+
+    progress.spinner().stop();
+
+    switch(response.status) {
+      case 200:
+        config.userpref.set('apiKey', responseJson.apiKey);
+        console.log(
+          chalk.green(emoji.emojify(responseJson.message))
+        );
+        break;
+      case 401:
+        console.log(
+          chalk.red(responseJson.message)
+        );
+        console.log('');
+        await verifyCode(email);
+        break;
+      default:
+        errors.returnServerError(response.status, responseJson);
+    }
+  }
+}

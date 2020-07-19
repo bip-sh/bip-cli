@@ -17,7 +17,7 @@ Signup for an account
 bip signup
 ```
 
-Login with your newly created API key
+Login with your new account
 
 ```shell
 bip login
@@ -36,7 +36,7 @@ Specify the amount you wish to topup by in the command. A new window will be ope
 
 ### Creating your first domain
 
-To create a domain on bip, use the domain create command
+To create a domain on Bip, use the domain create command
 
 ```shell
 bip domain create <domain>
@@ -46,7 +46,7 @@ Your domain should be in the format `yourdomain.bip.sh`
 
 ### Initialise your project
 
-Use the bip use command to indicate which bip domain should be used when deploying directories
+Use the bip use command to indicate which Bip domain should be used when deploying directories
 
 ```shell
 bip use <domain>
@@ -82,9 +82,15 @@ bip logout
 bip signup
 ```
 
+### Who am I
+
+```shell
+bip whoami
+```
+
 ### Create domain
 
-To create a domain on bip, use the domain create command
+To create a domain on Bip, use the domain create command
 
 ```shell
 bip domain create <domain>
@@ -120,7 +126,7 @@ bip account topup <amount>
 
 ### Initialise a project
 
-Specify the bip domain you wish to deploy to
+Specify the Bip domain you wish to deploy to
 
 ```shell
 bip use <domain>
@@ -128,7 +134,7 @@ bip use <domain>
 
 ### Deploy a directory
 
-To deploy the contents of a local directory to bip.sh, navigate to the directory and then use bip deploy
+To deploy the contents of a local directory to Bip, navigate to the directory and then use bip deploy
 
 ```shell
 bip deploy
