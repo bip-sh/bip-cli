@@ -40,47 +40,59 @@ module.exports = {
           { title: 'USD', description: 'United States Dollar', value: 'usd' }
         ],
         initial: 0
+      },
+      {
+        type: 'confirm',
+        name: 'terms',
+        message: 'Do you accept our Terms & Conditions, available at https://www.bip.sh/terms?',
+        initial: false
       }
     ];
 
     const inputResponse = await prompts(questions);
 
-    if (inputResponse.email && inputResponse.firstName && inputResponse.surname && inputResponse.currency) {
+    if (!inputResponse.terms) {
       console.log(
-        chalk.yellow('Email: ' + inputResponse.email + ' | First Name: ' + inputResponse.firstName + ' | Surname: ' + inputResponse.surname + ' | Currency: ' + inputResponse.currency)
+        chalk.red('You must accept our Terms & Conditions to continue.')
       );
+    } else {
+      if (inputResponse.email && inputResponse.firstName && inputResponse.surname && inputResponse.currency) {
+        console.log(
+          chalk.yellow('Email: ' + inputResponse.email + ' | First Name: ' + inputResponse.firstName + ' | Surname: ' + inputResponse.surname + ' | Currency: ' + inputResponse.currency)
+        );
 
-      const confirmRes = await prompts({
-        type: 'confirm',
-        name: 'value',
-        message: 'Would you like to create your account using the above details?',
-        initial: true
-      });
+        const confirmRes = await prompts({
+          type: 'confirm',
+          name: 'value',
+          message: 'Would you like to create your account using the above details?',
+          initial: true
+        });
 
-      if (confirmRes.value) {
-        progress.spinner().start('Creating your account');
+        if (confirmRes.value) {
+          progress.spinner().start('Creating your account');
 
-        let headers = {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-        let init = {
-          headers: headers,
-          method: 'POST',
-          body: 'email=' + inputResponse.email + '&firstName=' + inputResponse.firstName + '&surname=' + inputResponse.surname + '&currency=' + inputResponse.currency
-        }
-        let response = await validation.safelyFetch(config.api.baseurl + 'account/signup', init)
-        let responseJson = await validation.safelyParseJson(response)
+          let headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+          let init = {
+            headers: headers,
+            method: 'POST',
+            body: 'email=' + inputResponse.email + '&firstName=' + inputResponse.firstName + '&surname=' + inputResponse.surname + '&currency=' + inputResponse.currency
+          }
+          let response = await validation.safelyFetch(config.api.baseurl + 'account/signup', init)
+          let responseJson = await validation.safelyParseJson(response)
 
-        progress.spinner().stop();
+          progress.spinner().stop();
 
-        switch(response.status) {
-          case 200:
-            console.log(
-              chalk.green(emoji.emojify(responseJson.message))
-            );
-            break;
-          default:
-            errors.returnServerError(response.status, responseJson);
+          switch(response.status) {
+            case 200:
+              console.log(
+                chalk.green(emoji.emojify(responseJson.message))
+              );
+              break;
+            default:
+              errors.returnServerError(response.status, responseJson);
+          }
         }
       }
     }
