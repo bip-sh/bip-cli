@@ -45,6 +45,11 @@ remotestatus.getStatus(packageJson.version, function() {
     .action(auth.logoutCommand);
 
     program
+    .command('whoami')
+    .description('check the currently logged in user')
+    .action(auth.whoamiCommand);
+
+    program
     .command('signup')
     .description('signup to bip.sh')
     .action(signup.signupCommand);

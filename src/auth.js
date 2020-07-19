@@ -1,4 +1,5 @@
 const config = require('./config');
+const errors = require('./errors');
 const progress = require('./progress');
 const validation = require('./validation');
 const chalk = require('chalk');
@@ -52,5 +53,29 @@ module.exports = {
     console.log(
       chalk.green(emoji.get('door') + ' Logged out successfully')
     );
+  },
+  whoamiCommand: async function () {
+    validation.requireApiKey();
+
+    progress.spinner().start('Fetching data');
+
+    let headers = {
+      'X-Api-Key': config.userpref.get('apiKey')
+    }
+    let init = {
+      headers: headers,
+      method: 'GET'
+    }
+    let response = await validation.safelyFetch(config.api.baseurl + 'account/whoami', init)
+    let responseJson = await validation.safelyParseJson(response)
+
+    switch(response.status) {
+      case 200:
+        progress.spinner().stop();
+        console.log(emoji.get('wave') + ' You are logged in as ' + responseJson.account.email);
+        break;
+      default:
+        errors.returnServerError(response.status, responseJson);
+    }
   }
 };
