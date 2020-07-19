@@ -1,5 +1,6 @@
 const chalk = require('chalk');
-const progress = require('./progress')
+const emoji = require('node-emoji');
+const progress = require('./progress');
 
 module.exports = {
   returnError: function(errorMessage) {
@@ -13,7 +14,7 @@ module.exports = {
     progress.spinner().stop();
     if (responseJson.status === "error") {
       console.log(
-        chalk.red(responseJson.message)
+        chalk.red(emoji.emojify(responseJson.message))
       );
     } else {
       console.log(
