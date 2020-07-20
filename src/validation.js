@@ -27,9 +27,15 @@ module.exports = {
   safelyParseJson: function (response) {
     let responseJson = response.json().catch(function(err) {
       progress.spinner().stop();
-      console.log(
-        chalk.red('An error occurred while parsing the server response')
-      );
+      if (response.status == 429) {
+        console.log(
+          chalk.red('Too many requests. Please try again in a few minutes')
+        );
+      } else {
+        console.log(
+          chalk.red('An error occurred while parsing the server response')
+        );
+      }
       process.exit(1);
     })
     return responseJson;
