@@ -9,7 +9,7 @@ const prompts = require('prompts');
 module.exports = {
   signupCommand: async function () {
 
-    console.log(`Creating an account with bip.sh is quick and easy. We'll ask you a few questions, then send an API key to your email address.`)
+    console.log(`Creating an account with Bip is quick and easy. We just need to ask you a few questions.`)
 
     const questions = [
       {
