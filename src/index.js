@@ -22,7 +22,7 @@ if (argLength === 0) {
 
   console.log(
     chalk.red(
-      figlet.textSync('bip.sh', { horizontalLayout: 'full' })
+      figlet.textSync('bip', { horizontalLayout: 'full' })
     )
   );
   console.log('');
@@ -36,12 +36,12 @@ remotestatus.getStatus(packageJson.version, function() {
 
     program
     .command('login')
-    .description('login to bip.sh')
+    .description('login to Bip')
     .action(auth.loginCommand);
 
     program
     .command('logout')
-    .description('logout of bip.sh')
+    .description('logout of Bip')
     .action(auth.logoutCommand);
 
     program
@@ -51,7 +51,7 @@ remotestatus.getStatus(packageJson.version, function() {
 
     program
     .command('signup')
-    .description('signup to bip.sh')
+    .description('signup to Bip')
     .action(signup.signupCommand);
 
     const accountCmd = program.command('account')
@@ -63,9 +63,14 @@ remotestatus.getStatus(packageJson.version, function() {
     .action(account.balanceCommand);
 
     accountCmd
-    .command('topup <amount>')
-    .description('topup your account')
-    .action(account.topupCommand);
+    .command('billing')
+    .description('open the billing portal')
+    .action(account.billingCommand);
+
+    accountCmd
+    .command('setuppayment')
+    .description('attach a payment card to your account')
+    .action(account.setupPaymentCommand);
 
     const domainCmd = program.command('domain')
     .description('domain management');
