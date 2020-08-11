@@ -1,3 +1,4 @@
+const account = require('./account');
 const config = require('./config');
 const errors = require('./errors');
 const projectSettings = require('./projectsettings');

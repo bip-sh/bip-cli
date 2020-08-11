@@ -4,6 +4,7 @@ const progress = require('./progress');
 const validation = require('./validation');
 const emoji = require('node-emoji')
 const open = require('open');
+const prompts = require('prompts')
 
 module.exports = {
   balanceCommand: async function () {
@@ -30,20 +31,55 @@ module.exports = {
         errors.returnServerError(response.status, responseJson);
     }
   },
-  topupCommand: async function (amount) {
+  setupPaymentCommand: async function () {
     validation.requireApiKey();
 
-    progress.spinner().start('Requesting topup');
+    const promptRes = await prompts({
+      type: 'confirm',
+      name: 'value',
+      message: 'Press Y to open a new browser window and attach a payment card to your account',
+      initial: true
+    });
+
+    // Continue if user confirms
+    if (promptRes.value) {
+      progress.spinner().start('Requesting data');
+      let headers = {
+        'X-Api-Key': config.userpref.get('apiKey'),
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+      let init = {
+        headers: headers,
+        method: 'GET'
+      }
+      let response = await validation.safelyFetch(config.api.baseurl + 'account/setuppayment', init)
+      let responseJson = await validation.safelyParseJson(response)
+
+      progress.spinner().stop();
+
+      switch(response.status) {
+        case 200:
+          await open(responseJson.url);
+          console.log(emoji.get('link') + ' Please follow the instructions in the newly opened browser window to attach a payment card to your account.');
+          break;
+        default:
+          errors.returnServerError(response.status, responseJson);
+      }
+    }
+  },
+  billingCommand: async function () {
+    validation.requireApiKey();
+
+    progress.spinner().start('Requesting data');
     let headers = {
       'X-Api-Key': config.userpref.get('apiKey'),
       'Content-Type': 'application/x-www-form-urlencoded'
     }
     let init = {
       headers: headers,
-      method: 'POST',
-      body: 'amount=' + amount
+      method: 'GET'
     }
-    let response = await validation.safelyFetch(config.api.baseurl + 'account/topup', init)
+    let response = await validation.safelyFetch(config.api.baseurl + 'account/billingportal', init)
     let responseJson = await validation.safelyParseJson(response)
 
     progress.spinner().stop();
@@ -51,10 +87,10 @@ module.exports = {
     switch(response.status) {
       case 200:
         await open(responseJson.url);
-        console.log(emoji.get('link') + ' Please follow the instructions in the newly opened browser window to topup your account.');
+        console.log(emoji.get('link') + ' The billing portal has opened in a new window.');
         break;
       default:
         errors.returnServerError(response.status, responseJson);
     }
-  }
+  },
 };
