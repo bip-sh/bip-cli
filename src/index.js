@@ -76,7 +76,7 @@ remotestatus.getStatus(packageJson.version, function() {
     .description('domain management');
 
     domainCmd
-    .command('create <domain>')
+    .command('create')
     .description('create a new domain')
     .action(domain.createCommand);
 

@@ -5,6 +5,7 @@ const progress = require('./progress');
 const validation = require('./validation');
 const chalk = require('chalk');
 const emoji = require('node-emoji');
+const domain = require('./domain');
 
 module.exports = {
   get: async function (domainName, cb) {
@@ -34,6 +35,9 @@ module.exports = {
 
         if (responseJson.validCardAttached == false) {
           account.setupPaymentCommand();
+        }
+        if (responseJson.domainAvailable == false) {
+          domain.createCommand();
         }
         break;
       default:
