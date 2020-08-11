@@ -1,6 +1,6 @@
 # Bip CLI
 
-Bip is an easy to use static website hosting platform.
+The super fast static website hosting platform.
 
 ## Getting started
 ### Signup
@@ -22,16 +22,6 @@ Login with your new account
 ```shell
 bip login
 ```
-
-### Topup your account
-
-Before you create your first Bip domain, you'll need to topup your account.
-
-```shell
-bip account topup <amount>
-```
-
-Specify the amount you wish to topup by in the command. A new window will be opened to facilitate the topup.
 
 
 ### Creating your first domain
@@ -110,18 +100,12 @@ bip domain list
 bip domain delete <domain>
 ```
 
-### Balance
+### Billing
+
+Open the billing portal to see your active subscriptions and the payment card(s) attached to your account
 
 ```shell
-bip account balance
-```
-
-### Topup
-
-To topup your account, enter the amount you wish to topup by with the topup command
-
-```shell
-bip account topup <amount>
+bip account billing
 ```
 
 ### Initialise a project
