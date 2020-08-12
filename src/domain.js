@@ -169,11 +169,33 @@ module.exports.deleteCommand = async function (domain) {
   }
 }
 module.exports.useCommand = async function (domain) {
-  projectSettings.set('domain', domain);
+  validation.requireApiKey();
+  
+  let headers = {
+    'X-Api-Key': config.userpref.get('apiKey')
+  }
+  let init = {
+    headers: headers,
+    method: 'GET'
+  }
+  let response = await validation.safelyFetch(config.api.baseurl + 'domains/' + domain, init)
+  let responseJson = await validation.safelyParseJson(response)
 
-  console.log(
-    chalk.green(emoji.get('white_check_mark') + ' Domain set')
-  );
+  switch(response.status) {
+    case 200:
+      projectSettings.set('domain', domain);
+      console.log(
+        chalk.green(emoji.get('white_check_mark') + ' Domain set')
+      );
+      break;
+    case 404:
+      console.log(
+        chalk.red(emoji.emojify('The domain was not found on your account. Please ensure that you use the full domain, such as example.bip.sh'))
+      );
+      break;
+    default:
+      errors.returnServerError(response.status, responseJson);
+  }
 }
 module.exports.list = async function (cb) {
   cb = cb || function(){};
