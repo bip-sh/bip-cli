@@ -86,18 +86,18 @@ remotestatus.getStatus(packageJson.version, function() {
     .action(domain.listCommand);
 
     domainCmd
-    .command('delete <domain>')
+    .command('delete [domain]')
     .description('delete a domain')
     .action(domain.deleteCommand);
 
     program
-    .command('use <domain>')
+    .command('use [domain]')
     .description('set the domain to perform actions on')
     .action(domain.useCommand);
 
     program
     .command('deploy')
-    .description('deploy the current working directory to the bip.sh domain')
+    .description('deploy the current working directory to your Bip domain')
     .action(deploy.deployCommand);
 
   program.parse(process.argv);

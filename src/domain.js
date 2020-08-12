@@ -109,62 +109,78 @@ module.exports.createCommand = async function () {
   }
 }
 module.exports.deleteCommand = async function (domain) {
+  domain = domain || "";
+
   validation.requireApiKey();
 
-  const promptRes = await prompts({
-    type: 'confirm',
-    name: 'value',
-    message: 'Are you sure you want to delete the domain ' + domain + '?',
-    initial: false
-  });
-
-  // Continue if user confirms
-  if (promptRes.value) {
-    progress.spinner().start('Deleting domain');
-    let headers = {
-      'X-Api-Key': config.userpref.get('apiKey')
+  if (domain == "") {
+    const promptRes = await prompts({
+      type: 'text',
+      name: 'domain',
+      message: `Enter the domain that you'd like to delete`
+    });
+  
+    if (promptRes.domain) {
+      domain = promptRes.domain
     }
-    let init = {
-      headers: headers,
-      method: 'DELETE'
-    }
-    let response = await validation.safelyFetch(config.api.baseurl + 'domains/' + domain, init)
-    let responseJson = await validation.safelyParseJson(response)
+  }
 
-    switch(response.status) {
-      case 200:
-        tasks.getStatus(responseJson.taskID, function(status, statusText) {
-          statusText = statusText || "";
+  if (domain != "") {
+    const promptRes = await prompts({
+      type: 'confirm',
+      name: 'value',
+      message: 'Are you sure you want to delete the domain ' + domain + '?',
+      initial: false
+    });
 
-          progress.spinner().stop();
-      
-          if (status == 3) {
-            if (statusText != "") {
-              console.log(
-                chalk.green(emoji.get('white_check_mark') + ' ' + statusText)
-              );
-            } else {
-              console.log(
-                chalk.green(emoji.get('white_check_mark') + ' Domain deleted successfully!')
-              );
-            }
-          } else {
-            if (status == 4) {
+    // Continue if user confirms
+    if (promptRes.value) {
+      progress.spinner().start('Deleting domain');
+      let headers = {
+        'X-Api-Key': config.userpref.get('apiKey')
+      }
+      let init = {
+        headers: headers,
+        method: 'DELETE'
+      }
+      let response = await validation.safelyFetch(config.api.baseurl + 'domains/' + domain, init)
+      let responseJson = await validation.safelyParseJson(response)
+
+      switch(response.status) {
+        case 200:
+          tasks.getStatus(responseJson.taskID, function(status, statusText) {
+            statusText = statusText || "";
+
+            progress.spinner().stop();
+        
+            if (status == 3) {
               if (statusText != "") {
                 console.log(
-                  chalk.red(statusText)
+                  chalk.green(emoji.get('white_check_mark') + ' ' + statusText)
                 );
               } else {
                 console.log(
-                  chalk.red('An unknown error occurred during domain deletion')
+                  chalk.green(emoji.get('white_check_mark') + ' Domain deleted successfully!')
                 );
               }
+            } else {
+              if (status == 4) {
+                if (statusText != "") {
+                  console.log(
+                    chalk.red(statusText)
+                  );
+                } else {
+                  console.log(
+                    chalk.red('An unknown error occurred during domain deletion')
+                  );
+                }
+              }
             }
-          }
-        });
-        break;
-      default:
-        errors.returnServerError(response.status, responseJson);
+          });
+          break;
+        default:
+          errors.returnServerError(response.status, responseJson);
+      }
     }
   }
 }
