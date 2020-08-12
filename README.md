@@ -29,7 +29,7 @@ bip login
 To create a domain on Bip, use the domain create command
 
 ```shell
-bip domain create <domain>
+bip domain create
 ```
 
 Your domain should be in the format `yourdomain.bip.sh`
@@ -83,7 +83,7 @@ bip whoami
 To create a domain on Bip, use the domain create command
 
 ```shell
-bip domain create <domain>
+bip domain create
 ```
 
 Your domain should be in the format `yourdomain.bip.sh`
