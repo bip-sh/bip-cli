@@ -37,7 +37,7 @@ module.exports.createCommand = async function () {
   const promptRes = await prompts({
     type: 'text',
     name: 'domain',
-    message: `Please enter the domain that you'd like to create`
+    message: `Please enter the domain that you'd like to create, including the extension (e.g. example.bip.sh)`
   });
 
   if (promptRes.domain) {
