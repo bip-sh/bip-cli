@@ -72,7 +72,7 @@ module.exports = {
           progress.spinner().start('Creating your account');
 
           let headers = {
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'application/x-www-form-urlencoded',
           }
           let init = {
             headers: headers,

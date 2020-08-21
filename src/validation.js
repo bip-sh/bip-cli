@@ -32,14 +32,21 @@ module.exports.requireDomain = async function (argDomain) {
 module.exports.safelyParseJson = function (response) {
   let responseJson = response.json().catch(function(err) {
     progress.spinner().stop();
-    if (response.status == 429) {
-      console.log(
-        chalk.red('Too many requests. Please try again in a few minutes')
-      );
-    } else {
-      console.log(
-        chalk.red('An error occurred while parsing the server response')
-      );
+    switch(response.status) {
+      case 413:
+        console.log(
+          chalk.red('The deployment was too big to be uploaded')
+        );
+        break;
+      case 429:
+        console.log(
+          chalk.red('Too many requests. Please try again in a few minutes')
+        );
+        break;
+      default:
+        console.log(
+          chalk.red('An error occurred while parsing the server response')
+        );
     }
     process.exit(1);
   })

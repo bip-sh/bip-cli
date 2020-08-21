@@ -27,7 +27,6 @@
     "url": "git+https://github.com/bip-sh/cli.git"
   },
   "author": "Joel Kennedy <joel@bip.sh>",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/bip-sh/cli/issues"
   },

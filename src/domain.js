@@ -19,12 +19,12 @@ module.exports.listCommand = async function (path) {
       progress.spinner().stop();
       console.log('List of domains:');
       const table = new Table({
-          head: ['Domain'],
-          colWidths: [50]
+          head: ['Domain', 'Plan'],
+          colWidths: [50, 30]
       });
       domains.forEach(function (item) {
         table.push(
-          [item.domain_name]
+          [item.domain_name, item.plan_name]
         );
       });
       console.log(table.toString());
@@ -48,61 +48,94 @@ module.exports.createCommand = async function () {
     await domainavailability.get(domain, async function(response) {
       progress.spinner().stop();
 
-      const promptRes = await prompts( {
-        type: 'confirm',
-        name: 'value',
-        message: response.message,
-        initial: false
+      console.log(
+        'This domain is available'
+      );
+
+      if (response.plans.length == 0) {
+        console.log(
+          'No plans found'
+        );
+        process.exit(1);
+      }
+
+      let returnPlans = [];
+      response.plans.forEach(function(plan) {
+        returnPlans.push({
+          title: plan.plan_name,
+          description: plan.description,
+          value: plan.plan_id
+        })
+      });
+
+      const promptRes = await prompts({
+        type: 'select',
+        name: 'planID',
+        message: 'Please select a plan for this new domain',
+        choices: returnPlans,
+        initial: 0
       });
 
       // Continue if user confirms
-      if (promptRes.value) {
-        progress.spinner().start('Creating domain');
-        let headers = {
-          'X-Api-Key': config.userpref.get('apiKey')
-        }
-        let init = {
-          headers: headers,
-          method: 'POST'
-        }
-        let response = await validation.safelyFetch(config.api.baseurl + 'domains/' + domain, init)
-        let responseJson = await validation.safelyParseJson(response)
-    
-        switch(response.status) {
-          case 200:
-            // Track status of remote task
-            tasks.getStatus(responseJson.taskID, function(status, statusText) {
-              statusText = statusText || "";
+      if (promptRes.planID) {
+        const confirmRes = await prompts({
+          type: 'confirm',
+          name: 'value',
+          message: 'Are you sure you want to create the domain ' + domain + ' with the selected plan?',
+          initial: false
+        });
+  
+        // Continue if user confirms
+        if (confirmRes.value) {
+          progress.spinner().start('Creating domain');
+          let headers = {
+            'X-Api-Key': config.userpref.get('apiKey'),
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+          let init = {
+            headers: headers,
+            method: 'POST',
+            body: 'domain=' + domain + '&planID=' + promptRes.planID
+          }
+          let response = await validation.safelyFetch(config.api.baseurl + 'domains', init)
+          let responseJson = await validation.safelyParseJson(response)
+      
+          switch(response.status) {
+            case 200:
+              // Track status of remote task
+              tasks.getStatus(responseJson.taskID, function(status, statusText) {
+                statusText = statusText || "";
 
-              progress.spinner().stop();
-          
-              if (status == 3) {
-                if (statusText != "") {
-                  console.log(
-                    chalk.green(emoji.get('white_check_mark') + ' ' + statusText)
-                  );
-                } else {
-                  console.log(
-                    chalk.green(emoji.get('white_check_mark') + ' Domain created successfully!')
-                  );
-                }
-              } else {
-                if (status == 4) {
+                progress.spinner().stop();
+            
+                if (status == 3) {
                   if (statusText != "") {
                     console.log(
-                      chalk.red(statusText)
+                      chalk.green(emoji.get('white_check_mark') + ' ' + statusText)
                     );
                   } else {
                     console.log(
-                      chalk.red('An unknown error occurred during domain creation')
+                      chalk.green(emoji.get('white_check_mark') + ' Domain created successfully!')
                     );
                   }
+                } else {
+                  if (status == 4) {
+                    if (statusText != "") {
+                      console.log(
+                        chalk.red(statusText)
+                      );
+                    } else {
+                      console.log(
+                        chalk.red('An unknown error occurred during domain creation')
+                      );
+                    }
+                  }
                 }
-              }
-            });
-            break;
-          default:
-            errors.returnServerError(response.status, responseJson);
+              });
+              break;
+            default:
+              errors.returnServerError(response.status, responseJson);
+          }
         }
       }
     });

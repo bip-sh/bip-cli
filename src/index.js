@@ -9,6 +9,7 @@ const packageJson = require('../package.json');
 const account = require('./account');
 const auth = require('./auth');
 const domain = require('./domain');
+const domainalias = require('./domainalias');
 const deploy = require('./deploy');
 const signup = require('./signup');
 const remotestatus = require('./remotestatus');
@@ -72,6 +73,11 @@ remotestatus.getStatus(packageJson.version, function() {
     .description('attach a payment card to your account')
     .action(account.setupPaymentCommand);
 
+    accountCmd
+    .command('changeplan [domain]')
+    .description('change the plan for the selected domain')
+    .action(account.changePlanCommand);
+
     const domainCmd = program.command('domain')
     .description('domain management');
 
@@ -89,6 +95,24 @@ remotestatus.getStatus(packageJson.version, function() {
     .command('delete [domain]')
     .description('delete a domain')
     .action(domain.deleteCommand);
+
+    const aliasCmd = domainCmd.command('alias')
+    .description('alias management');
+
+    aliasCmd
+    .command('create')
+    .description('create a new domain alias')
+    .action(domainalias.createCommand);
+
+    aliasCmd
+    .command('list')
+    .description('list aliases')
+    .action(domainalias.listCommand);
+
+    aliasCmd
+    .command('delete [alias]')
+    .description('list a domain alias')
+    .action(domainalias.deleteCommand);
 
     program
     .command('use [domain]')
