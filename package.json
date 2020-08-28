@@ -1,6 +1,6 @@
 {
   "name": "@bip-sh/cli",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Bip is an easy to use static website hosting platform.",
   "main": "src/index.js",
   "bin": {
