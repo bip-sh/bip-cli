@@ -12,7 +12,6 @@ module.exports.frameworks = {
     name: 'jekyll',
     title: 'Jekyll',
     paths: [
-      '_site',
       '.jekyll-cache'
     ],
     deployDir: '_site'
@@ -22,7 +21,6 @@ module.exports.frameworks = {
     title: 'Hexo',
     paths: [
       'node_modules/hexo',
-      'public'
     ],
     deployDir: 'public'
   }
@@ -34,26 +32,42 @@ module.exports.deployPaths = [
 ]
 
 module.exports.detectFramework = async function () {
-  return new Promise(function (resolve, reject) {
-    Object.entries(module.exports.frameworks).forEach(([key, framework]) => {
-      let allPathsFound = true;
-      framework.paths.forEach(async function(path) {
-        if (!fs.existsSync(path)) {
-          allPathsFound = false
-          return
+  return new Promise(async function (resolve, reject) {
+    for (let key in module.exports.frameworks) {
+      if (module.exports.frameworks.hasOwnProperty(key)) {
+         let framework = module.exports.frameworks[key];
+            
+          let allPathsFound = true;
+          framework.paths.forEach(function (path) {
+            if (!fs.existsSync(path)) {
+              allPathsFound = false;
+              return;
+            }
+          });
+          if (allPathsFound) {
+            // Framework found
+            console.log(
+              chalk.green(emoji.emojify(":white_check_mark: It looks like your project is using " + framework.title + "!"))
+            );
+            projectSettings.set('framework', framework.name);
+
+            const confirmRes = await prompts({
+              type: 'confirm',
+              name: 'value',
+              message: `Would you like to push up the standard output directory of /${framework.deployDir} when you deploy?`,
+              initial: true
+            });
+
+            // Continue if user confirms
+            if (confirmRes.value) {
+              projectSettings.set('deployPath', framework.deployDir);
+            }
+            resolve(framework);
+          }
         }
-      })
-      if (allPathsFound) {
-        // Framework found
-        console.log(
-          chalk.green(emoji.emojify(":white_check_mark: It looks like your project is using " + framework.title + "!"))
-        );
-        projectSettings.set('framework', framework.name);
-        resolve(framework)
       }
-    })
     // Framework not found
-    resolve()
+    resolve(false)
   })
 }
 

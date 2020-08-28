@@ -61,8 +61,10 @@ module.exports.init = async function (showDeployHint) {
   }
   
   // No settings saved, begin init
-  await detectenv.detectFramework();
-  await detectenv.detectDeployPath();
+  let framework = await detectenv.detectFramework();
+  if (!framework) {
+    await detectenv.detectDeployPath();
+  }
   await domain.use("", true);
 
   let message = ":white_check_mark: Project initialised!";
