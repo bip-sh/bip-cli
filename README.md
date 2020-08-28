@@ -2,6 +2,8 @@
 
 The super fast static website hosting platform.
 
+To find out more, visit [bip.sh](https://bip.sh)
+
 ## Getting started
 ### Signup
 
