@@ -39,7 +39,7 @@ Your domain should be in the format `yourdomain.bip.sh`
 Use the bip use command to indicate which Bip domain should be used when deploying directories
 
 ```shell
-bip use <domain>
+bip init
 ```
 
 ### Deploy your project
@@ -110,10 +110,10 @@ bip account billing
 
 ### Initialise a project
 
-Specify the Bip domain you wish to deploy to
+Initialise your project
 
 ```shell
-bip use <domain>
+bip init
 ```
 
 ### Deploy a directory
@@ -122,10 +122,4 @@ To deploy the contents of a local directory to Bip, navigate to the directory an
 
 ```shell
 bip deploy
-```
-
-### Delete file
-
-```shell
-bip delete <filepath>
 ```
