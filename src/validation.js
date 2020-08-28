@@ -29,6 +29,21 @@ module.exports.requireDomain = async function (argDomain) {
   }
 
 }
+module.exports.requireProject = async function () {
+  thisProjectSettings = projectSettings.get();
+  if (!thisProjectSettings) {
+    progress.spinner().stop();
+    console.log(
+      "As this is the first time you're deploying this project, we're going to initialise it (you can also do this via 'bip init')"
+    );
+    if (await projectSettings.init(false)) {
+      return true;
+    }
+  } else {
+    return true;
+  }
+
+}
 module.exports.safelyParseJson = function (response) {
   let responseJson = response.json().catch(function(err) {
     progress.spinner().stop();

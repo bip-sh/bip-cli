@@ -218,7 +218,11 @@ module.exports.deleteCommand = async function (domain) {
   }
 }
 module.exports.useCommand = async function (domain) {
+  return module.exports.use(domain, false);
+}
+module.exports.use = async function (domain, silent) {
   domain = domain || "";
+  silent = silent || false;
 
   validation.requireApiKey();
 
@@ -226,7 +230,7 @@ module.exports.useCommand = async function (domain) {
     const promptRes = await prompts({
       type: 'text',
       name: 'domain',
-      message: `Enter the domain that you'd like to deploy this project to`
+      message: `Enter the domain that you'd like to deploy this project to (e.g. example.bip.sh)`
     });
   
     if (promptRes.domain) {
@@ -248,15 +252,18 @@ module.exports.useCommand = async function (domain) {
     switch(response.status) {
       case 200:
         projectSettings.set('domain', domain);
-        console.log(
-          chalk.green(emoji.get('white_check_mark') + ' Domain set')
-        );
+        if (!silent) {
+          console.log(
+            chalk.green(emoji.get('white_check_mark') + ' Domain set')
+          );
+        }
         return true;
         break;
       case 404:
         console.log(
           chalk.red(emoji.emojify('The domain was not found on your account. Please ensure that you use the full domain, such as example.bip.sh'))
         );
+        await module.exports.use("", silent);
         break;
       default:
         errors.returnServerError(response.status, responseJson);

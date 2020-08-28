@@ -15,71 +15,75 @@ const archiver = require('archiver');
 module.exports = {
   deployCommand: async function () {
     validation.requireApiKey();
-    if (await validation.requireDomain(program.domain)) {
-      let thisProjectSettings = projectSettings.get();
+    if (await validation.requireProject()) {
+      if (await validation.requireDomain(program.domain)) {
+        let thisProjectSettings = projectSettings.get();
 
-      let domain = program.domain || thisProjectSettings.domain;
+        let domain = program.domain || thisProjectSettings.domain;
 
-      progress.spinner().start('Archiving');
+        let deployDir = thisProjectSettings.deployPath ? '/' + thisProjectSettings.deployPath : ''
 
-      let deploymentFilename = 'deployment-' + Date.now() + '.zip';
+        progress.spinner().start('Archiving');
 
-      // Create archive
-      let output = file_system.createWriteStream(os.tmpdir() + '/' + deploymentFilename);
-      let archive = archiver('zip');
+        let deploymentFilename = 'deployment-' + Date.now() + '.zip';
 
-      output.on('close', function () {
-          //console.log(archive.pointer() + ' total bytes');
-          // Archive finalised
-          uploadDeployment(domain, os.tmpdir() + '/' + deploymentFilename, function(taskID) {
-            // Deployment has been uploaded
-            progress.spinner().text = 'Uploaded';
+        // Create archive
+        let output = file_system.createWriteStream(os.tmpdir() + '/' + deploymentFilename);
+        let archive = archiver('zip');
 
-            // Cleanup local archive
-            fs.unlinkSync(os.tmpdir() + '/' + deploymentFilename);
+        output.on('close', function () {
+            //console.log(archive.pointer() + ' total bytes');
+            // Archive finalised
+            uploadDeployment(domain, os.tmpdir() + '/' + deploymentFilename, function(taskID) {
+              // Deployment has been uploaded
+              progress.spinner().text = 'Uploaded';
 
-            // Track status of remote task
-            tasks.getStatus(taskID, function(status, statusText) {
-              statusText = statusText || "";
+              // Cleanup local archive
+              fs.unlinkSync(os.tmpdir() + '/' + deploymentFilename);
 
-              progress.spinner().stop();
-          
-              if (status == 3) {
-                if (statusText != "") {
-                  console.log(
-                    chalk.green(emoji.get('white_check_mark') + ' ' + statusText)
-                  );
-                } else {
-                  console.log(
-                    chalk.green(emoji.get('white_check_mark') + ' Deployed!')
-                  );
-                }
-              } else {
-                if (status == 4) {
+              // Track status of remote task
+              tasks.getStatus(taskID, function(status, statusText) {
+                statusText = statusText || "";
+
+                progress.spinner().stop();
+            
+                if (status == 3) {
                   if (statusText != "") {
                     console.log(
-                      chalk.red(statusText)
+                      chalk.green(emoji.get('tada') + ' ' + statusText)
                     );
                   } else {
                     console.log(
-                      chalk.red('An unknown error occurred during deployment')
+                      chalk.green(emoji.get('tada') + ' Deployed!')
                     );
                   }
+                } else {
+                  if (status == 4) {
+                    if (statusText != "") {
+                      console.log(
+                        chalk.red(statusText)
+                      );
+                    } else {
+                      console.log(
+                        chalk.red('An unknown error occurred during deployment')
+                      );
+                    }
+                  }
                 }
-              }
+              });
             });
-          });
-      });
+        });
 
-      archive.on('error', function(err){
-          throw err;
-      });
+        archive.on('error', function(err){
+            throw err;
+        });
 
-      archive.pipe(output);
+        archive.pipe(output);
 
-      // append files from a sub-directory and naming it `new-subdir` within the archive (see docs for more options):
-      archive.directory(process.cwd(), false);
-      archive.finalize();
+        // append files from a sub-directory and naming it `new-subdir` within the archive (see docs for more options):
+        archive.directory(process.cwd() + deployDir, false);
+        archive.finalize();
+      }
     }
   }
 }

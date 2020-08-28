@@ -11,6 +11,7 @@ const auth = require('./auth');
 const domain = require('./domain');
 const domainalias = require('./domainalias');
 const deploy = require('./deploy');
+const projectsettings = require('./projectsettings');
 const signup = require('./signup');
 const remotestatus = require('./remotestatus');
 
@@ -78,6 +79,11 @@ remotestatus.getStatus(packageJson.version, function() {
     .description('change the plan for the selected domain')
     .action(account.changePlanCommand);
 
+    program
+    .command('init')
+    .description('initialise the project directory')
+    .action(projectsettings.initCommand);
+
     const domainCmd = program.command('domain')
     .description('domain management');
 
@@ -116,7 +122,7 @@ remotestatus.getStatus(packageJson.version, function() {
 
     program
     .command('use [domain]')
-    .description('set the domain to perform actions on')
+    .description("set the deployment domain for the project")
     .action(domain.useCommand);
 
     program
