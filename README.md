@@ -1,5 +1,7 @@
 # Bip CLI
 
+![npm](https://img.shields.io/npm/v/@bip-sh/cli)
+
 The super fast static website hosting platform.
 
 To find out more, visit [bip.sh](https://bip.sh)
