@@ -94,5 +94,6 @@ module.exports.detectDeployPath = async function () {
         resolve()
       }
     })
+    resolve(false)
   })
 }
