@@ -23,6 +23,17 @@ module.exports.frameworks = {
       'node_modules/hexo',
     ],
     deployDir: 'public'
+  },
+  'hugo': {
+    name: 'hugo',
+    title: 'Hugo',
+    paths: [
+      'archetypes',
+      'content',
+      'layouts',
+      'config.toml'
+    ],
+    deployDir: 'public'
   }
 }
 
