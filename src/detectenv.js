@@ -43,7 +43,15 @@ module.exports.frameworks = {
       '.jekyll-cache'
     ],
     deployDir: '_site'
-  }
+  },
+  'middleman': {
+    name: 'middleman',
+    title: 'Middleman',
+    strings: {
+      'Gemfile': "gem 'middleman'"
+    },
+    deployDir: 'build'
+  },
 }
 
 module.exports.deployPaths = [
@@ -56,36 +64,46 @@ module.exports.detectFramework = async function () {
     for (let key in module.exports.frameworks) {
       if (module.exports.frameworks.hasOwnProperty(key)) {
          let framework = module.exports.frameworks[key];
+
+         let allPathsFound = true;
+         let allStringsFound = true;
             
-          let allPathsFound = true;
-          framework.paths.forEach(function (path) {
-            if (!fs.existsSync(path)) {
-              allPathsFound = false;
-              return;
-            }
-          });
-          if (allPathsFound) {
-            // Framework found
-            console.log(
-              chalk.green(emoji.emojify(":white_check_mark: It looks like your project is using " + framework.title + "!"))
-            );
-            projectSettings.set('framework', framework.name);
-
-            const confirmRes = await prompts({
-              type: 'confirm',
-              name: 'value',
-              message: `Would you like to push up the standard output directory of /${framework.deployDir} when you deploy?`,
-              initial: true
+          if (framework.hasOwnProperty('paths')) {
+            framework.paths.forEach(function (path) {
+              if (!fs.existsSync(path)) {
+                allPathsFound = false;
+                return;
+              }
             });
-
-            // Continue if user confirms
-            if (confirmRes.value) {
-              projectSettings.set('deployPath', framework.deployDir);
+          }
+          if (framework.hasOwnProperty('strings')) {
+            // Find strings
+            for (let key in framework.strings) {
+              if (framework.strings.hasOwnProperty(key)) {
+                let path = key;
+                let string = framework.strings[key];
+                
+                if (!fs.existsSync(path)) {
+                  allStringsFound = false;
+                } else {
+                  let filedata = fs.readFileSync(path);
+                  
+                  if(filedata.indexOf(string) == -1){
+                    allStringsFound = false;
+                  }
+                }
+              }
             }
+          }
+
+
+          if (allStringsFound && allPathsFound) {
+            // Framework found
+            await frameworkFound(framework);
             resolve(framework);
           }
         }
-      }
+    }
     // Framework not found
     resolve(false)
   })
@@ -116,4 +134,23 @@ module.exports.detectDeployPath = async function () {
     })
     resolve(false)
   })
+}
+
+frameworkFound = async function (framework) {
+  console.log(
+    chalk.green(emoji.emojify(":white_check_mark: It looks like your project is using " + framework.title + "!"))
+  );
+  projectSettings.set('framework', framework.name);
+
+  const confirmRes = await prompts({
+    type: 'confirm',
+    name: 'value',
+    message: `Would you like to push up the standard output directory of /${framework.deployDir} when you deploy?`,
+    initial: true
+  });
+
+  // Continue if user confirms
+  if (confirmRes.value) {
+    projectSettings.set('deployPath', framework.deployDir);
+  }
 }
