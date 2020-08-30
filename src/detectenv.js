@@ -8,13 +8,14 @@ const progress = require('./progress');
 const projectSettings = require('./projectsettings');
 
 module.exports.frameworks = {
-  'jekyll': {
-    name: 'jekyll',
-    title: 'Jekyll',
+  'gatsby': {
+    name: 'gatsby',
+    title: 'Gatsby',
     paths: [
-      '.jekyll-cache'
+      'node_modules/gatsby',
+      'gatsby-config.js'
     ],
-    deployDir: '_site'
+    deployDir: 'public'
   },
   'hexo': {
     name: 'hexo',
@@ -34,6 +35,14 @@ module.exports.frameworks = {
       'config.toml'
     ],
     deployDir: 'public'
+  },
+  'jekyll': {
+    name: 'jekyll',
+    title: 'Jekyll',
+    paths: [
+      '.jekyll-cache'
+    ],
+    deployDir: '_site'
   }
 }
 
