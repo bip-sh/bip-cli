@@ -117,7 +117,7 @@ remotestatus.getStatus(packageJson.version, function() {
 
     aliasCmd
     .command('delete [alias]')
-    .description('list a domain alias')
+    .description('delete a domain alias')
     .action(domainalias.deleteCommand);
 
     program
