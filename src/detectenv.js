@@ -52,6 +52,14 @@ module.exports.frameworks = {
     },
     deployDir: 'build'
   },
+  'nuxtjs': {
+    name: 'nuxtjs',
+    title: 'NuxtJS',
+    paths: [
+      'nuxt.config.js'
+    ],
+    deployDir: 'dist'
+  },
 }
 
 module.exports.deployPaths = [
