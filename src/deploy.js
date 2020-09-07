@@ -9,8 +9,11 @@ const validation = require('./validation');
 const tasks = require('./tasks');
 const emoji = require('node-emoji');
 const chalk = require('chalk');
+const _colors = require('colors');
 const file_system = require('fs');
+const got = require('got');
 const archiver = require('archiver');
+const cliProgress = require('cli-progress');
 
 module.exports = {
   deployCommand: async function () {
@@ -93,7 +96,7 @@ async function uploadDeployment(domain, filepath, cb) {
 
   // Read the file
   try {
-    var data = fs.readFileSync(filepath);
+    var data = fs.createReadStream(filepath);
   } catch (err) {
     errors.returnError('An error occurred when reading the deployment for upload. ' + err.message);
   }
@@ -102,21 +105,35 @@ async function uploadDeployment(domain, filepath, cb) {
   let headers = {
     'X-Api-Key': config.userpref.get('apiKey')
   }
-  let init = {
-    headers: headers,
-    method: 'PUT',
-    body: data
-  }
-  let response = await validation.safelyFetch(config.api.baseurl + 'deploy/' + domain, init)
-  let responseJson = await validation.safelyParseJson(response)
 
   progress.spinner().stop();
 
-  switch(response.status) {
-    case 200:
-      cb(responseJson.taskID);
-      break;
-    default:
-      errors.returnServerError(response.status, responseJson);
-  }
+  // create a new progress bar instance and use shades_classic theme
+  const uploadProgressBar = new cliProgress.SingleBar({
+    format: 'Uploading ' + _colors.red('{bar}') + ' {percentage}%',
+    hideCursor: true,
+    clearOnComplete: true
+  }, cliProgress.Presets.shades_classic);
+
+  // start the progress bar with a total value of 200 and start value of 0
+  uploadProgressBar.start(1, 0);
+
+  try {
+    const response = await got.put(config.api.baseurl + 'deploy/' + domain, {
+      headers: headers,
+      body: data,
+      responseType: 'json'
+    })
+    .on('uploadProgress', prog => {
+      uploadProgressBar.update(prog.percent);
+    });
+
+    uploadProgressBar.stop();
+
+    cb(response.body.taskID);
+  } catch (error) {
+    uploadProgressBar.stop();
+    
+    errors.returnServerError(error.statusCode, error.response.body);
+	}
 }
