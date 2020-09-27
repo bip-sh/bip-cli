@@ -26,10 +26,10 @@ module.exports = {
 
           let domain = program.domain || thisProjectSettings.domain;
 
-          let remoteSyncLocation = '/';
+          let remoteSyncLocation = path.sep;
 
           // Only sync if LFS directory exists
-          if (fs.existsSync(process.cwd() + '/_lfs')) {
+          if (fs.existsSync(process.cwd() + path.sep + '_lfs')) {
             progress.spinner().start('Syncing');
 
             listLib.list({
@@ -43,7 +43,7 @@ module.exports = {
                   // Read and upload the files in local dir
                   await readFilesInDir({
                     remoteFiles: remoteFiles,
-                    localDirectory: process.cwd() + '/_lfs',
+                    localDirectory: process.cwd() + path.sep + '_lfs',
                     remoteSyncLocation: remoteSyncLocation
                   });
 
@@ -66,7 +66,7 @@ module.exports = {
                   // Read and upload the files in local dir
                   await readFilesInDir({
                     remoteFiles: null,
-                    localDirectory: process.cwd() + '/_lfs',
+                    localDirectory: process.cwd() + path.sep + '_lfs',
                     remoteSyncLocation: remoteSyncLocation
                   });
 
@@ -99,7 +99,11 @@ async function readFilesInDir(args) {
     let filename = path.join(args.localDirectory, file);
 
     // Add to local files array for use during file cleanup/delete later
-    localFiles.push(filename.replace(process.cwd() + '/_lfs/', ''));
+    localFiles.push(filename.replace(process.cwd() + path.sep + '_lfs' + path.sep, ''));
+
+    //console.log(filename.replace(process.cwd() + path.sep + '_lfs' + path.sep, ''))
+
+    //process.exit(1);
 
     // Don't upload hidden files
     if (!file.startsWith('.')) {
@@ -111,18 +115,20 @@ async function readFilesInDir(args) {
           remoteSyncLocation: args.remoteSyncLocation
         });
       } else {
-        var contents = fs.readFileSync(args.localDirectory + '/' + file);
+        var contents = fs.readFileSync(args.localDirectory + path.sep + file);
 
         // Get checksum of read file
         let shasum = crypto.createHash('sha1');
         shasum.update(contents);
         let localFileHash = shasum.digest('hex');
+
+        let localFilename = filename.replace(process.cwd() + path.sep + '_lfs' + path.sep, '');
         
         // Check if this filename has already been uploaded
         let needsUploading = true;
         if (args.remoteFiles !== null) {
           for (const remoteFile of args.remoteFiles) {
-            if (remoteFile.filename === filename.replace(process.cwd() + '/_lfs/', '')) {
+            if (remoteFile.filename === localFilename) {
               // Same filename
               // Check if checksum is the same
               if (remoteFile.hash === localFileHash) {
@@ -138,7 +144,7 @@ async function readFilesInDir(args) {
           if (!uploadError) {
             // Upload file
             let origin = filename;
-            let destination = args.remoteSyncLocation + filename.replace(process.cwd() + '/_lfs/', '');
+            let destination = args.remoteSyncLocation + localFilename;
             let response = await fileLib.upload(origin, destination);
             if (!response) {
               uploadError = true;
@@ -162,7 +168,7 @@ async function deleteNonMatchingFiles(args) {
 
   for (const remoteFile of args.remoteFiles) {
     let markedForDeletion = true;
-    for (const localFile of args.localFiles) {
+    for (let localFile of args.localFiles) {
       if (localFile === remoteFile.filename) {
         // File is a local file, do not delete
         markedForDeletion = false;
@@ -173,4 +179,17 @@ async function deleteNonMatchingFiles(args) {
       await fileLib.delete(filename);
     }
   }
+}
+
+function urlencode(str) {
+  str = (str + '').toString();
+
+  // Tilde should be allowed unescaped in future versions of PHP (as reflected below), but if you want to reflect current
+  // PHP behavior, you would need to add ".replace(/~/g, '%7E');" to the following.
+  return encodeURIComponent(str).replace('!', '%21')
+      .replace(/\\/g, '%27')
+      .replace(/\(/g, '%28')
+      .replace(/\)/g, '%29')
+      .replace(/\*/g, '%2A')
+      .replace(/%20/g, '+');
 }
