@@ -98,12 +98,10 @@ async function readFilesInDir(args) {
   for (const file of files) {
     let filename = path.join(args.localDirectory, file);
 
+    let localFilename = filename.replace(process.cwd() + path.sep + '_lfs' + path.sep, '');
+
     // Add to local files array for use during file cleanup/delete later
-    localFiles.push(filename.replace(process.cwd() + path.sep + '_lfs' + path.sep, ''));
-
-    //console.log(filename.replace(process.cwd() + path.sep + '_lfs' + path.sep, ''))
-
-    //process.exit(1);
+    localFiles.push(localFilename);
 
     // Don't upload hidden files
     if (!file.startsWith('.')) {
@@ -121,14 +119,12 @@ async function readFilesInDir(args) {
         let shasum = crypto.createHash('sha1');
         shasum.update(contents);
         let localFileHash = shasum.digest('hex');
-
-        let localFilename = filename.replace(process.cwd() + path.sep + '_lfs' + path.sep, '');
         
         // Check if this filename has already been uploaded
         let needsUploading = true;
         if (args.remoteFiles !== null) {
           for (const remoteFile of args.remoteFiles) {
-            if (remoteFile.filename === localFilename) {
+            if (remoteFile.filename === localFilename.replace(/\\/g, '/')) {
               // Same filename
               // Check if checksum is the same
               if (remoteFile.hash === localFileHash) {
@@ -169,7 +165,7 @@ async function deleteNonMatchingFiles(args) {
   for (const remoteFile of args.remoteFiles) {
     let markedForDeletion = true;
     for (let localFile of args.localFiles) {
-      if (localFile === remoteFile.filename) {
+      if (localFile.replace(/\\/g, '/') === remoteFile.filename) {
         // File is a local file, do not delete
         markedForDeletion = false;
       }
