@@ -14,6 +14,7 @@ const file_system = require('fs');
 const got = require('got');
 const archiver = require('archiver');
 const cliProgress = require('cli-progress');
+const lfs = require('./lfs');
 
 module.exports = {
   deployCommand: async function () {
@@ -25,6 +26,9 @@ module.exports = {
         let domain = program.domain || thisProjectSettings.domain;
 
         let deployDir = thisProjectSettings.deployPath ? '/' + thisProjectSettings.deployPath : ''
+
+        // LFS sync
+        await lfs.sync();
 
         progress.spinner().start('Archiving');
 
@@ -83,8 +87,10 @@ module.exports = {
 
         archive.pipe(output);
 
-        // append files from a sub-directory and naming it `new-subdir` within the archive (see docs for more options):
-        archive.directory(process.cwd() + deployDir, false);
+        archive.glob('**/*', {
+          cwd: process.cwd() + deployDir,
+          ignore: ['_lfs/**']
+        })
         archive.finalize();
       }
     }
@@ -134,6 +140,6 @@ async function uploadDeployment(domain, filepath, cb) {
   } catch (error) {
     uploadProgressBar.stop();
     
-    errors.returnServerError(error.statusCode, error.response.body);
+    errors.returnServerError(error.response.statusCode, error.response.body);
 	}
 }

@@ -10,7 +10,9 @@ module.exports = {
     );
     process.exit(1);
   },
-  returnServerError: function (responseStatus, responseJson) {
+  returnServerError: function (responseStatus, responseJson, exit) {
+    exit = (typeof exit !== 'undefined') ? exit : true;
+
     progress.spinner().stop();
     if (responseJson.status === "error") {
       console.log(
@@ -21,6 +23,8 @@ module.exports = {
         chalk.red('An unknown error occurred. Status code: ' + responseStatus)
       );
     }
-    process.exit(1);
+    if (exit) {
+      process.exit(1);
+    }
   }
 };
