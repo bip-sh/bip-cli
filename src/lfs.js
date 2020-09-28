@@ -113,13 +113,22 @@ async function readFilesInDir(args) {
           remoteSyncLocation: args.remoteSyncLocation
         });
       } else {
-        var contents = fs.readFileSync(args.localDirectory + path.sep + file);
-
-        // Get checksum of read file
-        let shasum = crypto.createHash('sha1');
-        shasum.update(contents);
-        let localFileHash = shasum.digest('hex');
         
+
+        let localFileHash = await new Promise((resolve, reject) => {
+          progress.spinner().text = "Checking file hash: " + args.localDirectory + path.sep + file;
+          var fd = fs.createReadStream(args.localDirectory + path.sep + file);
+          var hash = crypto.createHash('sha1');
+          hash.setEncoding('hex');
+          fd.on('end', function() {
+            hash.end();
+            resolve(hash.read()); // the desired sha1sum
+          });
+          fd.on('error', reject);
+          // read all file and pipe it (write it) to the hash object
+          fd.pipe(hash);
+        });   
+
         // Check if this filename has already been uploaded
         let needsUploading = true;
         if (args.remoteFiles !== null) {

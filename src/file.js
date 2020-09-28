@@ -78,7 +78,12 @@ module.exports = {
       })
       .on('uploadProgress', prog => {
         //console.log(prog.percent);
-        progress.spinner().text = 'Uploading file to LFS: ' + filepath + ' (' + parseInt(prog.percent * 100) + '%)';
+        let value = parseInt(prog.percent * 100);
+        if (value !== 100) {
+          progress.spinner().text = 'Uploading file to LFS: ' + filepath + ' (' + parseInt(prog.percent * 100) + '%)';
+        } else {
+          progress.spinner().text = 'Uploading file to LFS: ' + filepath + ' (Processing)';
+        }
       });
   
       progress.spinner().stop();
