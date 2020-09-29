@@ -92,7 +92,6 @@ module.exports = {
       return true;
     } catch (error) {
       progress.spinner().stop();
-      console.log(error.response);
       errors.returnServerError(error.response.statusCode, error.response.body, false);
     }
   }
