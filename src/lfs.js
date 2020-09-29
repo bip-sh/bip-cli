@@ -116,8 +116,10 @@ async function readFilesInDir(args) {
         
 
         let localFileHash = await new Promise((resolve, reject) => {
-          progress.spinner().text = "Checking file hash: " + args.localDirectory + path.sep + file;
-          var fd = fs.createReadStream(args.localDirectory + path.sep + file);
+          let filePath = args.localDirectory + path.sep + file
+          let relativePath = filePath.replace(process.cwd() + path.sep + '_lfs' + path.sep, '');
+          progress.spinner().text = "Checking file hash: " + relativePath;
+          var fd = fs.createReadStream(filePath);
           var hash = crypto.createHash('sha1');
           hash.setEncoding('hex');
           fd.on('end', function() {

@@ -66,7 +66,8 @@ module.exports = {
     } catch (err) {
       errors.returnError('An error occurred when reading the file. ' + err.message);
     }
-    progress.spinner().start('Uploading file to LFS: ' + filepath + ' (0%)');
+    let relativePath = filepath.replace(process.cwd() + path.sep + '_lfs' + path.sep, '');
+    progress.spinner().start('Uploading file to LFS: ' + relativePath + ' (0%)');
     try {
       let headers = {
         'X-Api-Key': config.userpref.get('apiKey')
@@ -80,9 +81,9 @@ module.exports = {
         //console.log(prog.percent);
         let value = parseInt(prog.percent * 100);
         if (value !== 100) {
-          progress.spinner().text = 'Uploading file to LFS: ' + filepath + ' (' + parseInt(prog.percent * 100) + '%)';
+          progress.spinner().text = 'Uploading file to LFS: ' + relativePath + ' (' + parseInt(prog.percent * 100) + '%)';
         } else {
-          progress.spinner().text = 'Uploading file to LFS: ' + filepath + ' (Processing)';
+          progress.spinner().text = 'Uploading file to LFS: ' + relativePath + ' (Processing)';
         }
       });
   
