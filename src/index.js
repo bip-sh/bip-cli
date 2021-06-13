@@ -11,6 +11,7 @@ const auth = require('./auth');
 const domain = require('./domain');
 const domainalias = require('./domainalias');
 const deploy = require('./deploy');
+const functions = require('./functions');
 const projectsettings = require('./projectsettings');
 const signup = require('./signup');
 const remotestatus = require('./remotestatus');
@@ -119,6 +120,34 @@ remotestatus.getStatus(packageJson.version, function() {
     .command('delete [alias]')
     .description('delete a domain alias')
     .action(domainalias.deleteCommand);
+
+    const functionCmd = program.command('fn')
+    .description('function management');
+
+    functionCmd
+    .command('create')
+    .description('create a new function')
+    .action(functions.createCommand);
+
+    functionCmd
+    .command('list <domain>')
+    .description('list functions')
+    .action(functions.listCommand);
+
+    functionCmd
+    .command('init')
+    .description('initialise the function')
+    .action(projectsettings.initFunctionCommand);
+
+    functionCmd
+    .command('deploy')
+    .description('deploy the current working directory to your Bip Function')
+    .action(functions.deployCommand);
+
+    functionCmd
+    .command('delete')
+    .description('delete a function')
+    .action(functions.deleteCommand);
 
     program
     .command('use [domain]')
