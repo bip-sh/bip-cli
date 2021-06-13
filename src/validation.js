@@ -1,6 +1,7 @@
 const chalk = require('chalk');
 const config = require('./config');
 const domain = require('./domain');
+const functions = require('./functions');
 const progress = require('./progress');
 const projectSettings = require('./projectsettings');
 const fetch = require('node-fetch');
@@ -29,6 +30,21 @@ module.exports.requireDomain = async function (argDomain) {
   }
 
 }
+module.exports.requireFunction = async function (argFunction) {
+  thisProjectSettings = projectSettings.get();
+  if (!thisProjectSettings.function && !argFunction) {
+    progress.spinner().stop();
+    console.log(
+      "You need to specify the function you'd like to deploy to"
+    );
+    if (await functions.useCommand()) {
+      return true;
+    }
+  } else {
+    return true;
+  }
+
+}
 module.exports.requireProject = async function () {
   thisProjectSettings = projectSettings.get();
   if (!thisProjectSettings) {
@@ -42,7 +58,20 @@ module.exports.requireProject = async function () {
   } else {
     return true;
   }
-
+}
+module.exports.requireFunctionProject = async function () {
+  thisProjectSettings = projectSettings.get();
+  if (!thisProjectSettings) {
+    progress.spinner().stop();
+    console.log(
+      "As this is the first time you're deploying this function, we're going to initialise it (you can also do this via 'bip fn init')"
+    );
+    if (await projectSettings.initFunction(false)) {
+      return true;
+    }
+  } else {
+    return true;
+  }
 }
 module.exports.safelyParseJson = function (response) {
   let responseJson = response.json().catch(function(err) {

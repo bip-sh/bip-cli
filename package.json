@@ -1,6 +1,6 @@
 {
   "name": "@bip-sh/cli",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Bip is an easy to use static website hosting platform.",
   "main": "src/index.js",
   "bin": {
@@ -19,7 +19,9 @@
     "node-fetch": "^2.6.0",
     "open": "^7.0.3",
     "ora": "^4.0.3",
-    "prompts": "^2.3.2"
+    "prompts": "^2.3.2",
+    "rimraf": "^3.0.2",
+    "webpack": "^5.37.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

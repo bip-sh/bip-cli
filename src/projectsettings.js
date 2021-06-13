@@ -4,6 +4,7 @@ const emoji = require('node-emoji');
 const prompts = require('prompts');
 const detectenv = require('./detectenv');
 const domain = require('./domain');
+const functions = require('./functions');
 
 module.exports.get = function () {
   try {
@@ -70,6 +71,42 @@ module.exports.init = async function (showDeployHint) {
   let message = ":white_check_mark: Project initialised!";
   if (showDeployHint) {
     message += " When you're ready to deploy, just run 'bip deploy'";
+  }
+  console.log(
+    chalk.green(emoji.emojify(message))
+  );
+  return true;
+}
+module.exports.initFunctionCommand = async function () {
+  return module.exports.initFunction(true);
+}
+module.exports.initFunction = async function (showDeployHint) {
+  let thisProjectSettings = module.exports.get();
+  if (thisProjectSettings) {
+    const confirmRes = await prompts({
+      type: 'confirm',
+      name: 'value',
+      message: "This function has already been initialised. Would you like to re-initialise it?",
+      initial: false
+    });
+
+    // Continue only if user confirms
+    if (!confirmRes.value) {
+      process.exit(1);
+    }
+  }
+
+  if (thisProjectSettings) {
+    // Delete function settings
+    fs.unlinkSync('bip.json');
+  }
+  
+  await domain.use("", true);
+  await functions.use("", true)
+
+  let message = ":white_check_mark: Function initialised!";
+  if (showDeployHint) {
+    message += " When you're ready to deploy, just run 'bip fn deploy'";
   }
   console.log(
     chalk.green(emoji.emojify(message))
