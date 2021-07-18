@@ -118,30 +118,28 @@ module.exports.detectFramework = async function () {
 }
 
 module.exports.detectDeployPath = async function () {
-  return new Promise(function (resolve, reject) {
-    module.exports.deployPaths.forEach(async function(path) {
-      if (fs.existsSync(path)) {
-        const confirmRes = await prompts({
-          type: 'confirm',
-          name: 'value',
-          message: "We found an output directory at /" + path + ". Would you like to upload this folder when you deploy?",
-          initial: true
-        });
+  for (let path of module.exports.deployPaths) {
+    if (fs.existsSync(path)) {
+      const confirmRes = await prompts({
+        type: 'confirm',
+        name: 'value',
+        message: "We found an output directory at /" + path + ". Would you like to upload this folder when you deploy?",
+        initial: true
+      });
 
-        // Continue if user confirms
-        if (confirmRes.value) {
-          projectSettings.set('deployPath', path);
-          resolve(path)
-        } else {
-          console.log(
-           emoji.emojify("OK, we'll make any deployments from the current directory")
-          );
-        }
-        resolve()
+      // Continue if user confirms
+      if (confirmRes.value) {
+        projectSettings.set('deployPath', path);
+        return true;
+      } else {
+        console.log(
+         emoji.emojify("OK, we'll make any deployments from the current directory")
+        );
       }
-    })
-    resolve(false)
-  })
+      return false;
+    }
+  }
+  return false;
 }
 
 frameworkFound = async function (framework) {
