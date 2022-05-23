@@ -154,11 +154,10 @@ module.exports.deployCommand = async function () {
         webpack({
           mode: 'production',
           entry: './index.js',
-          target: 'node',
+          target: 'webworker',
           output: {
             path: tmpLocation,
-            filename: 'index.js',
-            libraryTarget: 'commonjs'
+            filename: 'index.js'
           }
         }, (err, stats) => { // [Stats Object](#stats-object)
           if (err || stats.hasErrors()) {
