@@ -12,6 +12,7 @@ const Table = require('cli-table');
 const emoji = require('node-emoji');
 const fs = require("fs");
 const os = require("os");
+const process = require("process");
 const prompts = require('prompts');
 const webpack = require('webpack');
 const { program } = require('commander');
@@ -150,8 +151,8 @@ module.exports.deployCommand = async function () {
         if (!fs.existsSync('./index.js')) {
           errors.returnError('Your function directory must contain an index.js file.');
         }
-
-        webpack({
+        
+        let webpackConfig = {
           mode: 'production',
           entry: './index.js',
           target: 'webworker',
@@ -159,7 +160,26 @@ module.exports.deployCommand = async function () {
             path: tmpLocation,
             filename: 'index.js'
           }
-        }, (err, stats) => { // [Stats Object](#stats-object)
+        };
+
+        if (fs.existsSync('./webpack.config.js')) {
+          webpackConfig = require(path.join(process.cwd(), './webpack.config.js'));
+          webpackConfig = await (typeof webpackConfig === "function" ? webpackConfig({}) : webpackConfig);
+        }
+
+        if (webpackConfig.target !== undefined && webpackConfig.target !== "webworker") {
+          errors.returnError(`Building a function with target ${JSON.stringify(config.target)} isn't supported`);
+        }
+        webpackConfig.target = "webworker";
+
+        if (webpackConfig.output === undefined) {
+          webpackConfig.output = {};
+        }
+
+        webpackConfig.output.path = tmpLocation;
+        webpackConfig.output.filename = 'index.js';
+
+        webpack(webpackConfig, (err, stats) => { // [Stats Object](#stats-object)
           if (err || stats.hasErrors()) {
             progress.spinner().stop();
             // [Handle errors here](#error-handling)
@@ -194,7 +214,7 @@ module.exports.use = async function (functionName, silent) {
     const promptRes = await prompts({
       type: 'text',
       name: 'functionName',
-      message: `Enter the function that you'd like to deploy this project to`
+      message: `Enter the name of the function that you'd like to deploy to`
     });
   
     if (promptRes.functionName) {
