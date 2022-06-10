@@ -77,6 +77,7 @@ module.exports = {
                     }
                   }
                 }
+                alertTerminal();
               });
             });
         });
@@ -142,4 +143,8 @@ async function uploadDeployment(domain, filepath, cb) {
     
     errors.returnServerError(error.response.statusCode, error.response.body);
 	}
+}
+
+function alertTerminal() {
+  process.stdout.write('\x07');
 }
