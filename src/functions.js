@@ -1,12 +1,9 @@
-const account = require('./account');
 const config = require('./config');
 const errors = require('./errors');
+const domain = require('./domain');
 const projectSettings = require('./projectsettings');
-const prices = require('./prices');
-const domainavailability = require('./domainavailability');
 const progress = require('./progress');
 const validation = require('./validation');
-const tasks = require('./tasks');
 const chalk = require('chalk');
 const Table = require('cli-table');
 const emoji = require('node-emoji');
@@ -19,40 +16,48 @@ const { program } = require('commander');
 const path = require('path');
 const got = require('got');
 const rimraf = require('rimraf');
+const { resolve } = require('path');
 
-module.exports.listCommand = async function (domain) {
+module.exports.listCommand = async function (thisDomain) {
+  thisDomain = thisDomain || null;
+
   validation.requireApiKey();
 
-  progress.spinner().start('Listing functions');
-  await module.exports.list(domain, function(status, functions) {
-    if (status) {
+  if (thisDomain == null) {
+    progress.spinner().start('Requesting data');
+
+    thisDomain = await domain.listChoose({ 
+      message: `Select the domain that you'd like list functions for` 
+    });
+  }
+
+  if (thisDomain != null) {
+    progress.spinner().start('Listing functions');
+    let functionsResponse =  await module.exports.list(thisDomain, false);
+    if (functionsResponse && functionsResponse.status) {
       progress.spinner().stop();
       console.log('List of functions:');
       const table = new Table({
           head: ['Function'],
           colWidths: [50]
       });
-      functions.forEach(function (item) {
+      functionsResponse.functions.forEach(function (item) {
         table.push(
           [item.name]
         );
       });
       console.log(table.toString());
     }
-  });
+  }
 }
 module.exports.createCommand = async function () {
   validation.requireApiKey();
 
-  const promptRes = await prompts({
-    type: 'text',
-    name: 'domain',
-    message: `Enter the domain that you'd like to create a function on`
+  let thisDomain = await domain.listChoose({ 
+    message: `Select the domain that you'd like to create a function on` 
   });
 
-  if (promptRes.domain) {
-    let domain = promptRes.domain
-
+  if (thisDomain != null) {
     const functionPromptRes = await prompts({
       type: 'text',
       name: 'function',
@@ -69,7 +74,7 @@ module.exports.createCommand = async function () {
       let init = {
         headers: headers,
         method: 'POST',
-        body: 'domain=' + domain + '&function=' + functionPromptRes.function
+        body: 'domain=' + thisDomain + '&function=' + functionPromptRes.function
       }
       let response = await validation.safelyFetch(config.api.baseurl + 'functions/create', init)
       let responseJson = await validation.safelyParseJson(response)
@@ -91,22 +96,17 @@ module.exports.createCommand = async function () {
 module.exports.deleteCommand = async function () {
   validation.requireApiKey();
 
-  const promptRes = await prompts({
-    type: 'text',
-    name: 'domain',
-    message: `Enter the domain the function belongs to`
+  let thisDomain = await domain.listChoose({ 
+    message: `Select the domain the function belongs to` 
   });
 
-  if (promptRes.domain) {
-    domain = promptRes.domain
-
-    const functionPromptRes = await prompts({
-      type: 'text',
-      name: 'function',
-      message: `Enter the name of the function you'd like to delete`
+  if (thisDomain != null) {
+    let thisFunction = await module.exports.listChoose({
+      domain: thisDomain,
+      message: `Confirm the function you'd like to delete` 
     });
 
-    if (functionPromptRes.function) {
+    if (thisFunction != null) {
       progress.spinner().start('Deleting function');
 
       let headers = {
@@ -115,7 +115,7 @@ module.exports.deleteCommand = async function () {
       let init = {
         headers: headers,
         method: 'DELETE',
-        body: 'domain=' + domain + '&function=' + functionPromptRes.function
+        body: 'domain=' + thisDomain + '&function=' + thisFunction
       }
       let response = await validation.safelyFetch(config.api.baseurl + 'functions', init)
       let responseJson = await validation.safelyParseJson(response)
@@ -132,6 +132,7 @@ module.exports.deleteCommand = async function () {
           errors.returnServerError(response.status, responseJson);
       }
     }
+  
   }
 }
 module.exports.deployCommand = async function () {
@@ -202,57 +203,97 @@ module.exports.deployCommand = async function () {
   }
 }
 module.exports.useCommand = async function (functionName) {
-  return module.exports.use(functionName, false);
+  let thisDomain = await domain.listChoose({ 
+    message: `Select the domain the function belongs to` 
+  });
+
+  if (thisDomain != null) {
+    return module.exports.use(promptRes.domain, functionName, false);
+  }
 }
-module.exports.use = async function (functionName, silent) {
-  functionName = functionName || "";
+module.exports.use = async function (domain, functionName, silent) {
+  functionName = functionName || null;
   silent = silent || false;
 
   validation.requireApiKey();
 
-  if (functionName == "") {
-    const promptRes = await prompts({
-      type: 'text',
-      name: 'functionName',
-      message: `Enter the name of the function that you'd like to deploy to`
+  if (functionName == null) { 
+    functionName = await module.exports.listChoose({
+      domain: domain,
+      message: `Enter the name of the function that you'd like to deploy to` 
     });
-  
-    if (promptRes.functionName) {
-      functionName = promptRes.functionName
-    }
   }
 
-  if (functionName != "") {
+  if (functionName != null) {
     projectSettings.set('function', functionName);
     if (!silent) {
       console.log(
         chalk.green(emoji.get('white_check_mark') + ' Function set')
       );
     }
+    return true;
   }
 }
-module.exports.list = async function (domain, cb) {
-  cb = cb || function(){};
+module.exports.listChoose = async function(opts) {
+  thisDomain = opts.domain || null;
+  message = opts.message || "";
+
+  return new Promise(async function (resolve, reject) {
+    if (thisDomain == null) {
+      // A domain must be specified
+      resolve(null)
+    } else {
+      let functionsResponse =  await module.exports.list(thisDomain, false);
+      if (functionsResponse && functionsResponse.status) {
+
+        let functionChoices = []
+        functionsResponse.functions.forEach(function (item) {
+          functionChoices.push({ title: item.name });
+        });
+
+        const functionPromptRes = await prompts({
+          type: 'autocomplete',
+          name: 'function',
+          message: message,
+          choices: functionChoices
+        });
+
+        if (functionPromptRes.function) {
+          resolve(functionPromptRes.function)
+        }
+      }
+    }
+  });
+}
+module.exports.list = async function (domain, throwErrors) {
+  throwErrors = throwErrors || false;
 
   validation.requireApiKey();
-  
-  let headers = {
-    'X-Api-Key': config.userpref.get('apiKey')
-  }
-  let init = {
-    headers: headers,
-    method: 'GET'
-  }
-  let response = await validation.safelyFetch(config.api.baseurl + 'functions/' + domain, init)
-  let responseJson = await validation.safelyParseJson(response)
 
-  switch(response.status) {
-    case 200:
-      cb(true, responseJson.functions);
-      break;
-    default:
-      errors.returnServerError(response.status, responseJson);
-  }
+  return new Promise(async function (resolve, reject) {
+    let headers = {
+      'X-Api-Key': config.userpref.get('apiKey')
+    }
+    let init = {
+      headers: headers,
+      method: 'GET'
+    }
+    let response = await validation.safelyFetch(config.api.baseurl + 'functions/' + domain, init)
+    let responseJson = await validation.safelyParseJson(response)
+
+    switch(response.status) {
+      case 200:
+        resolve({status: true, functions: responseJson.functions});
+        break;
+      default:
+        if (throwErrors) {
+          reject(errors.formattedServerError(response.status, responseJson))
+        } else {
+          errors.returnServerError(response.status, responseJson);
+          resolve({status: false});
+        }
+    }
+  });
 }
 async function uploadDeployment(domain, functionName, filepath, cb) {
   cb = cb || function(){};

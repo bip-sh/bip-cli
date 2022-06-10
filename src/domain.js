@@ -1,8 +1,7 @@
-const account = require('./account');
 const config = require('./config');
+const domainLib = require('./domain');
 const errors = require('./errors');
 const projectSettings = require('./projectsettings');
-const prices = require('./prices');
 const domainavailability = require('./domainavailability');
 const progress = require('./progress');
 const validation = require('./validation');
@@ -14,22 +13,22 @@ const prompts = require('prompts');
 
 module.exports.listCommand = async function (path) {
   progress.spinner().start('Listing domains');
-  await module.exports.list(function(status, domains) {
-    if (status) {
-      progress.spinner().stop();
-      console.log('List of domains:');
-      const table = new Table({
-          head: ['Domain', 'Plan'],
-          colWidths: [50, 30]
-      });
-      domains.forEach(function (item) {
-        table.push(
-          [item.domain_name, item.plan_name]
-        );
-      });
-      console.log(table.toString());
-    }
-  });
+  let domainsResponse = await module.exports.list();
+
+  if (domainsResponse.status) {
+    progress.spinner().stop();
+    console.log('List of domains:');
+    const table = new Table({
+        head: ['Domain', 'Plan'],
+        colWidths: [50, 30]
+    });
+    domainsResponse.domains.forEach(function (item) {
+      table.push(
+        [item.domain_name, item.plan_name]
+      );
+    });
+    console.log(table.toString());
+  }
 }
 module.exports.createCommand = async function () {
   validation.requireApiKey();
@@ -142,23 +141,17 @@ module.exports.createCommand = async function () {
   }
 }
 module.exports.deleteCommand = async function (domain) {
-  domain = domain || "";
+  domain = domain || null;
 
   validation.requireApiKey();
 
-  if (domain == "") {
-    const promptRes = await prompts({
-      type: 'text',
-      name: 'domain',
-      message: `Enter the domain that you'd like to delete`
+  if (domain == null) {
+    domain = await module.exports.listChoose({ 
+      message: `Select the domain that you'd like to delete` 
     });
-  
-    if (promptRes.domain) {
-      domain = promptRes.domain
-    }
   }
 
-  if (domain != "") {
+  if (domain != null) {
     const promptRes = await prompts({
       type: 'confirm',
       name: 'value',
@@ -218,32 +211,25 @@ module.exports.deleteCommand = async function (domain) {
   }
 }
 module.exports.useCommand = async function (domain) {
-  return module.exports.use(domain, false);
+  return module.exports.use(domain, "site", false);
 }
 module.exports.use = async function (domain, type, silent) {
-  domain = domain || "";
+  domain = domain || null;
   type = type || "site";
   silent = silent || false;
 
   validation.requireApiKey();
 
-  if (domain == "") {
-    let string = `Enter the domain that you'd like to deploy this project to (e.g. example.bip.sh)`
+  if (domain == null) {
+    let string = `Select the domain that you'd like to deploy this project to`
     if (type == "function") {
-      string = `Enter the domain that you'd like to deploy this function to (e.g. example.bip.sh)`
+      string = `Select the domain that you'd like to deploy this function to`
     }
-    const promptRes = await prompts({
-      type: 'text',
-      name: 'domain',
-      message: string
-    });
-  
-    if (promptRes.domain) {
-      domain = promptRes.domain
-    }
+    
+    domain = await module.exports.listChoose({ message: string });
   }
 
-  if (domain != "") {
+  if (domain != null) {
     let headers = {
       'X-Api-Key': config.userpref.get('apiKey')
     }
@@ -262,39 +248,87 @@ module.exports.use = async function (domain, type, silent) {
             chalk.green(emoji.get('white_check_mark') + ' Domain set')
           );
         }
-        return true;
+        return domain;
         break;
       case 404:
         console.log(
           chalk.red(emoji.emojify('The domain was not found on your account. Please ensure that you use the full domain, such as example.bip.sh'))
         );
-        await module.exports.use("", type, silent);
+        await module.exports.use(null, type, silent);
         break;
       default:
         errors.returnServerError(response.status, responseJson);
     }
   }
 }
-module.exports.list = async function (cb) {
-  cb = cb || function(){};
+module.exports.listChoose = async function(opts) {
+  message = opts.message || "";
+
+  return new Promise(async function (resolve, reject) {
+    progress.spinner().start('Requesting data');
+
+    let domainsResponse = await module.exports.list(true).catch(function(err) {
+      if (err.code == 404) {
+        console.log(
+          chalk.red('You need to create a domain first')
+        );
+      } else {
+        console.log(
+          chalk.red('An unknown error occurred')
+        );
+      }
+    })
+
+    if (domainsResponse && domainsResponse.status) {
+      progress.spinner().stop();
+
+      let choices = []
+      domainsResponse.domains.forEach(function (item) {
+        choices.push({ title: item.domain_name });
+      });
+
+      const promptRes = await prompts({
+        type: 'autocomplete',
+        name: 'domain',
+        message: message,
+        choices: choices
+      });
+
+      if (promptRes.domain) {
+        resolve(promptRes.domain);
+      } else {
+        resolve(null);
+      }
+    }
+  });
+}
+module.exports.list = async function (throwErrors) {
+  throwErrors = throwErrors || false;
 
   validation.requireApiKey();
-  
-  let headers = {
-    'X-Api-Key': config.userpref.get('apiKey')
-  }
-  let init = {
-    headers: headers,
-    method: 'GET'
-  }
-  let response = await validation.safelyFetch(config.api.baseurl + 'domains', init)
-  let responseJson = await validation.safelyParseJson(response)
 
-  switch(response.status) {
-    case 200:
-      cb(true, responseJson.domains);
-      break;
-    default:
-      errors.returnServerError(response.status, responseJson);
-  }
+  return new Promise(async function (resolve, reject) {
+    let headers = {
+      'X-Api-Key': config.userpref.get('apiKey')
+    }
+    let init = {
+      headers: headers,
+      method: 'GET'
+    }
+    let response = await validation.safelyFetch(config.api.baseurl + 'domains', init)
+    let responseJson = await validation.safelyParseJson(response)
+
+    switch(response.status) {
+      case 200:
+        resolve({status: true, domains: responseJson.domains});
+        break;
+      default:
+        if (throwErrors) {
+          reject(errors.formattedServerError(response.status, responseJson))
+        } else {
+          errors.returnServerError(response.status, responseJson);
+          resolve({status: false});
+        }
+    }
+  });
 }

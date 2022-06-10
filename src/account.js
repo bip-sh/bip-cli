@@ -1,5 +1,6 @@
 const config = require('./config');
 const errors = require('./errors');
+const domainLib = require('./domain');
 const progress = require('./progress');
 const validation = require('./validation');
 const chalk = require('chalk')
@@ -95,24 +96,17 @@ module.exports.billingCommand = async function () {
 }
 
 module.exports.changePlanCommand = async function (domain) {
-  domain = domain || "";
+  domain = domain || null;
 
   validation.requireApiKey();
 
-  if (domain == "") {
-    const promptRes = await prompts({
-      type: 'text',
-      name: 'domain',
-      message: `Enter the domain that you'd like to change the plan for`
+  if (domain == null) {
+    domain = await domainLib.listChoose({ 
+      message: `Select the domain that you'd like to change the plan for` 
     });
-  
-    if (promptRes.domain) {
-      domain = promptRes.domain
-    }
   }
 
-  if (domain != "") {
-
+  if (domain != null) {
     progress.spinner().start('Requesting data');
     let headers = {
       'X-Api-Key': config.userpref.get('apiKey'),

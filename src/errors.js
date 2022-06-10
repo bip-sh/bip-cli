@@ -26,5 +26,13 @@ module.exports = {
     if (exit) {
       process.exit(1);
     }
+  },
+  formattedServerError: function (responseStatus, responseJson) {
+    progress.spinner().stop();
+    if (responseJson.status === "error") {
+      return { code: responseStatus, message: responseJson.message}
+    } else {
+      return { code: 0, message: `An unknown error occurred. Status code: ${responseStatus}`}
+    }
   }
 };

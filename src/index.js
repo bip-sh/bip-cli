@@ -130,7 +130,7 @@ remotestatus.getStatus(packageJson.version, function() {
     .action(functions.createCommand);
 
     functionCmd
-    .command('list <domain>')
+    .command('list [domain]')
     .description('list functions')
     .action(functions.listCommand);
 

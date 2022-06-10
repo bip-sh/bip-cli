@@ -1,5 +1,6 @@
 const account = require('./account');
 const config = require('./config');
+const domainLib = require('./domain');
 const errors = require('./errors');
 const projectSettings = require('./projectsettings');
 const prices = require('./prices');
@@ -14,33 +15,30 @@ const prompts = require('prompts');
 
 module.exports.listCommand = async function (path) {
   progress.spinner().start('Listing aliases');
-  await module.exports.list(function(status, aliases) {
-    if (status) {
-      progress.spinner().stop();
-      console.log('List of aliases:');
-      const table = new Table({
-          head: ['Alias', 'Domain'],
-          colWidths: [40, 40]
-      });
-      aliases.forEach(function (item) {
-        table.push(
-          [item.alias_name, item.domain_name]
-        );
-      });
-      console.log(table.toString());
-    }
-  });
+  let aliasesResponse = await module.exports.list();
+  if (aliasesResponse.status) {
+    progress.spinner().stop();
+    console.log('List of aliases:');
+    const table = new Table({
+        head: ['Alias', 'Domain'],
+        colWidths: [40, 40]
+    });
+    aliasesResponse.aliases.forEach(function (item) {
+      table.push(
+        [item.alias_name, item.domain_name]
+      );
+    });
+    console.log(table.toString());
+  }
 }
 module.exports.createCommand = async function () {
   validation.requireApiKey();
 
+  let domain = await domainLib.listChoose({ 
+    message: `Please select the Bip domain that you'd like to link your alias to` 
+  });
+
   const questions = [
-    {
-      type: 'text',
-      name: 'domain',
-      message: "Please enter the Bip domain that you'd like to link your alias to, including the extension (e.g. example.bip.sh)",
-      validate: value => value ? true : `This field is required`
-    },
     {
       type: 'text',
       name: 'alias',
@@ -49,10 +47,12 @@ module.exports.createCommand = async function () {
     }
   ];
 
-  const inputResponse = await prompts(questions);
+  let inputResponse
+  if (domain != null) {
+    inputResponse = await prompts(questions);
+  }
 
-  if (inputResponse.domain && inputResponse.alias) {
-    let domain = inputResponse.domain
+  if (domain != null && inputResponse.alias) {
     let alias = inputResponse.alias
 
     progress.spinner().start('Creating alias');
@@ -108,23 +108,17 @@ module.exports.createCommand = async function () {
   }
 }
 module.exports.deleteCommand = async function (alias) {
-  alias = alias || "";
+  alias = alias || null;
 
   validation.requireApiKey();
 
-  if (alias == "") {
-    const promptRes = await prompts({
-      type: 'text',
-      name: 'alias',
-      message: `Enter the alias that you'd like to delete`
+  if (alias == null) {
+    alias = await module.exports.listChoose({ 
+      message: `Select the alias that you'd like to delete` 
     });
-  
-    if (promptRes.alias) {
-      alias = promptRes.alias
-    }
   }
 
-  if (alias != "") {
+  if (alias != null) {
     const promptRes = await prompts({
       type: 'confirm',
       name: 'value',
@@ -183,26 +177,74 @@ module.exports.deleteCommand = async function (alias) {
     }
   }
 }
-module.exports.list = async function (cb) {
-  cb = cb || function(){};
+module.exports.listChoose = async function(opts) {
+  message = opts.message || "";
+
+  return new Promise(async function (resolve, reject) {
+    progress.spinner().start('Requesting data');
+
+    let aliasesResponse = await module.exports.list(true).catch(function(err) {
+      if (err.code == 404) {
+        console.log(
+          chalk.red('You need to create a domain first')
+        );
+      } else {
+        console.log(
+          chalk.red('An unknown error occurred')
+        );
+      }
+    })
+
+    if (aliasesResponse && aliasesResponse.status) {
+      progress.spinner().stop();
+
+      let choices = []
+      aliasesResponse.aliases.forEach(function (item) {
+        choices.push({ title: item.alias_name });
+      });
+
+      const promptRes = await prompts({
+        type: 'autocomplete',
+        name: 'alias',
+        message: message,
+        choices: choices
+      });
+
+      if (promptRes.alias) {
+        resolve(promptRes.alias);
+      } else {
+        resolve(null);
+      }
+    }
+  });
+}
+module.exports.list = async function (throwErrors) {
+  throwErrors = throwErrors || false;
 
   validation.requireApiKey();
-  
-  let headers = {
-    'X-Api-Key': config.userpref.get('apiKey')
-  }
-  let init = {
-    headers: headers,
-    method: 'GET'
-  }
-  let response = await validation.safelyFetch(config.api.baseurl + 'aliases', init)
-  let responseJson = await validation.safelyParseJson(response)
 
-  switch(response.status) {
-    case 200:
-      cb(true, responseJson.aliases);
-      break;
-    default:
-      errors.returnServerError(response.status, responseJson);
-  }
+  return new Promise(async function (resolve, reject) {
+    let headers = {
+      'X-Api-Key': config.userpref.get('apiKey')
+    }
+    let init = {
+      headers: headers,
+      method: 'GET'
+    }
+    let response = await validation.safelyFetch(config.api.baseurl + 'aliases', init)
+    let responseJson = await validation.safelyParseJson(response)
+
+    switch(response.status) {
+      case 200:
+        resolve({status: true, aliases: responseJson.aliases});
+        break;
+      default:
+        if (throwErrors) {
+          reject(errors.formattedServerError(response.status, responseJson))
+        } else {
+          errors.returnServerError(response.status, responseJson);
+          resolve({status: false});
+        }
+    }
+  });
 }

@@ -66,16 +66,20 @@ module.exports.init = async function (showDeployHint) {
   if (!framework) {
     await detectenv.detectDeployPath();
   }
-  await domain.use("", true);
+  let result = await domain.use(null, true);
 
-  let message = ":white_check_mark: Project initialised!";
-  if (showDeployHint) {
-    message += " When you're ready to deploy, just run 'bip deploy'";
+  if (result) {
+    let message = ":white_check_mark: Project initialised!";
+    if (showDeployHint) {
+      message += " When you're ready to deploy, just run 'bip deploy'";
+    }
+    console.log(
+      chalk.green(emoji.emojify(message))
+    );
+    return true;
+  } else {
+    return false;
   }
-  console.log(
-    chalk.green(emoji.emojify(message))
-  );
-  return true;
 }
 module.exports.initFunctionCommand = async function () {
   return module.exports.initFunction(true);
@@ -101,15 +105,22 @@ module.exports.initFunction = async function (showDeployHint) {
     fs.unlinkSync('bip.json');
   }
   
-  await domain.use("", true);
-  await functions.use("", true)
-
-  let message = ":white_check_mark: Function initialised!";
-  if (showDeployHint) {
-    message += " When you're ready to deploy, just run 'bip fn deploy'";
+  let ourDomain = await domain.use(null, "function", true);
+  if (ourDomain) {
+    let ourFunction = await functions.use(ourDomain, null, true)
+    if (ourFunction) {
+      let message = ":white_check_mark: Function initialised!";
+      if (showDeployHint) {
+        message += " When you're ready to deploy, just run 'bip fn deploy'";
+      }
+      console.log(
+        chalk.green(emoji.emojify(message))
+      );
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return false;
   }
-  console.log(
-    chalk.green(emoji.emojify(message))
-  );
-  return true;
 }
