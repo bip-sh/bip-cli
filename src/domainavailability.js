@@ -29,12 +29,16 @@ module.exports = {
         break;
       case 400:
         progress.spinner().stop();
-        console.log(
-          chalk.red(emoji.emojify(responseJson.message))
-        );
 
         if (responseJson.validCardAttached == false) {
+          console.log(
+            chalk.yellow(emoji.emojify(responseJson.message))
+          );
           account.setupPaymentCommand();
+        } else {
+          console.log(
+            chalk.red(emoji.emojify(responseJson.message))
+          );
         }
         if (responseJson.domainAvailable == false) {
           domain.createCommand();
